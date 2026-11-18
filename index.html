@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TERMINAL PRO — Trading Journal Enterprise</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body{height:100%;width:100%;overflow:hidden;}
+body{background:#0B0E13;color:#EDE8DD;font-family:'Source Serif 4',serif;font-size:13px;}
+#app{display:flex;height:100vh;flex-direction:column;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:#0B0E13;}
+::-webkit-scrollbar-thumb{background:#2A3140;border-radius:3px;}
+
+/* HEADER */
+.header{background:linear-gradient(90deg, #0B0E13 0%, #2A3140 100%);border-bottom:1px solid #E3A857;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:100;height:50px;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.header-left{display:flex;align-items:center;gap:24px;}
+.logo{font-weight:800;font-size:16px;letter-spacing:2px;color:#E3A857;}
+.logo small{color:#8891A0;font-size:9px;display:block;letter-spacing:0.5px;}
+.status-bar{display:flex;gap:16px;font-size:11px;}
+.status-item{display:flex;align-items:center;gap:6px;color:#8891A0;}
+.status-item .dot{width:8px;height:8px;border-radius:50%;background:#6FA287;}
+.status-item .dot.warn{background:#E3A857;}
+.status-item .dot.error{background:#C1554A;}
+.header-right{display:flex;gap:12px;align-items:center;}
+.btn-header{padding:8px 14px;background:#0B0E13;border:1px solid #2A3140;color:#8891A0;font-size:10px;cursor:pointer;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.btn-header:hover{border-color:#E3A857;color:#E3A857;}
+.btn-header.primary{background:#E3A857;color:#0B0E13;border-color:#E3A857;}
+
+/* CONTAINER */
+.container{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:160px;background:#141922;border-right:1px solid #2A3140;overflow-y:auto;padding:10px 0;}
+.nav-group{margin-bottom:2px;}
+.nav-title{padding:8px 12px;font-size:9px;font-weight:700;color:#8891A0;text-transform:uppercase;letter-spacing:.5px;}
+.nav-item{padding:9px 12px;font-size:11px;color:#8891A0;cursor:pointer;border-left:2px solid transparent;transition:all .2s;}
+.nav-item:hover{color:#E3A857;background:#1B212C;}
+.nav-item.active{color:#E3A857;background:#1B212C;border-left-color:#E3A857;font-weight:700;}
+.nav-item .icon{display:inline-block;width:14px;text-align:center;margin-right:6px;}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:20px;}
+
+/* METRICS CARDS */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.metric-card{background:linear-gradient(155deg,#171A24 0%,#12141C 100%);padding:14px 16px;display:flex;flex-direction:column;border:1px solid #2A3140;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.28);transition:transform .18s ease, border-color .18s ease;}
+.metric-card:hover{transform:translateY(-2px);border-color:#3A4258;}
+.metric-label{font-size:9px;color:#8891A0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.metric-value{font-size:20px;font-weight:800;color:#EDE8DD;font-variant-numeric:tabular-nums;margin-bottom:4px;}
+.metric-value.positive{color:#6FA287;}
+.metric-value.negative{color:#C1554A;}
+.metric-value.neutral{color:#E3A857;}
+.metric-change{font-size:9px;color:#8891A0;}
+.metric-bar{height:3px;background:#2A3140;margin-top:6px;border-radius:1px;overflow:hidden;}
+.metric-bar-fill{height:100%;background:#E3A857;}
+
+/* TABS */
+.tab-bar{display:flex;gap:1px;background:#2A3140;border-bottom:1px solid #2A3140;margin-bottom:16px;padding:0;border:1px solid #2A3140;margin-bottom:16px;}
+.tab-btn{flex:1;padding:12px;background:#0B0E13;color:#8891A0;font-size:11px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:.5px;border:none;transition:all .2s;}
+.tab-btn:hover{color:#E3A857;}
+.tab-btn.active{color:#E3A857;background:#1B212C;border-bottom:2px solid #E3A857;}
+
+/* GRID LAYOUTS */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;}
+.grid-full{margin-bottom:16px;}
+
+/* PANELS */
+.panel{background:#141922;border:1px solid #2A3140;padding:18px;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.3);}
+.panel-title{font-size:11px;font-weight:700;color:#E3A857;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;border-bottom:1px solid #2A3140;padding-bottom:8px;}
+.panel-subtitle{font-size:9px;color:#8891A0;margin-top:4px;}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;}
+.rt-table{width:100%;font-size:10px;border-collapse:collapse;}
+.rt-table th{text-align:left;color:#8891A0;font-weight:700;padding:8px 6px;border-bottom:1px solid #2A3140;text-transform:uppercase;font-size:8px;letter-spacing:.3px;}
+.rt-table td{padding:8px 6px;border-bottom:1px solid #1B212C;color:#EDE8DD;}
+.rt-table tbody tr:hover td{background:#1B212C;}
+.pnl-pos{color:#6FA287;font-weight:700;}
+.pnl-neg{color:#C1554A;font-weight:700;}
+
+/* CARDS */
+.trade-card{background:#141922;border-left:3px solid #6FA287;border:1px solid #2A3140;border-left:3px solid #6FA287;padding:12px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;}
+.trade-card.loss{border-left-color:#C1554A;}
+.trade-card.be{border-left-color:#E3A857;}
+.trade-pnl{font-size:16px;font-weight:800;color:#6FA287;font-variant-numeric:tabular-nums;min-width:70px;}
+.trade-card.loss .trade-pnl{color:#C1554A;}
+.trade-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;}
+.trade-pair{font-size:12px;font-weight:700;color:#EDE8DD;}
+.trade-info{font-size:9px;color:#8891A0;}
+.trade-notes{font-size:10px;color:#8891A0;margin-top:6px;line-height:1.4;}
+.tag{display:inline-block;padding:3px 6px;font-size:8px;font-weight:700;background:rgba(227,168,87,.15);color:#E3A857;text-transform:uppercase;letter-spacing:.3px;margin-right:4px;margin-top:4px;border-radius:2px;}
+.tag.win{background:rgba(111,162,135,.15);color:#6FA287;}
+.tag.loss{background:rgba(193,85,74,.15);color:#C1554A;}
+.tag.be{background:rgba(227,168,87,.15);color:#E3A857;}
+
+/* METRIC RING (donut estilo TradeZella) */
+.metric-card.ringed{flex-direction:row;align-items:center;justify-content:space-between;}
+.metric-ring{width:52px;height:52px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.metric-ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:#12141C;}
+.metric-ring span{position:relative;font-size:9px;font-weight:800;color:#EDE8DD;z-index:1;}
+
+/* FORMS */
+.form-group{margin-bottom:12px;}
+.form-label{display:block;font-size:9px;font-weight:700;color:#8891A0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 10px;background:#0B0E13;border:1px solid #2A3140;color:#EDE8DD;font-size:12px;font-family:inherit;border-radius:8px;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:#E3A857;box-shadow:0 0 8px rgba(227,168,87,.2);}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-textarea{resize:vertical;min-height:60px;}
+
+/* BUTTONS */
+.btn{padding:10px 18px;border:1px solid #2A3140;background:#0B0E13;color:#8891A0;font-size:11px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-radius:8px;transition:all .2s;}
+.btn:hover{border-color:#E3A857;color:#E3A857;}
+.btn-primary{background:#E3A857;color:#0B0E13;border-color:#E3A857;font-weight:700;}
+.btn-primary:hover{background:#EFC08A;}
+.btn-sm{padding:6px 10px;font-size:9px;}
+.btn-danger{border-color:#C1554A;color:#C1554A;}
+.btn-danger:hover{background:rgba(193,85,74,.1);}
+
+/* CHARTS */
+.chart-container{position:relative;height:250px;margin-bottom:12px;}
+.mini-chart{position:relative;height:120px;margin-top:8px;}
+
+/* BREAKDOWN STATS */
+.stats-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.stat-item{background:#1B212C;padding:10px;border-left:2px solid #E3A857;}
+.stat-label{font-size:9px;color:#8891A0;text-transform:uppercase;}
+.stat-value{font-size:14px;font-weight:700;color:#EDE8DD;margin-top:4px;}
+.stat-value.green{color:#6FA287;}
+.stat-value.red{color:#C1554A;}
+
+/* HEATMAP */
+.heatmap-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px;}
+.heatmap-cell{aspect-ratio:1;background:#111;border:1px solid #2A3140;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#8891A0;border-radius:2px;cursor:pointer;transition:all .2s;}
+.heatmap-cell.win{background:rgba(111,162,135,.25);color:#6FA287;border-color:#6FA287;}
+.heatmap-cell.loss{background:rgba(193,85,74,.25);color:#C1554A;border-color:#C1554A;}
+.heatmap-cell.break{background:rgba(227,168,87,.15);color:#E3A857;border-color:#E3A857;}
+
+/* MONTH CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr) 1fr;gap:4px;}
+.cal-headcell{font-size:9px;font-weight:700;color:#8891A0;text-transform:uppercase;text-align:center;padding:4px 0;letter-spacing:.3px;}
+.cal-headcell.week-col{color:#E3A857;}
+.cal-cell{aspect-ratio:1;background:#0B0E13;border:1px solid #2A3140;border-radius:8px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;min-height:64px;transition:transform .15s ease;}
+.cal-cell:not(.empty):hover{transform:scale(1.04);}
+.cal-cell.empty{background:transparent;border-color:transparent;}
+.cal-cell.win{background:rgba(111,162,135,.14);border-color:#6FA287;}
+.cal-cell.loss{background:rgba(193,85,74,.14);border-color:#C1554A;}
+.cal-cell.be{background:rgba(227,168,87,.1);border-color:#E3A857;}
+.cal-daynum{font-size:10px;color:#8891A0;font-weight:700;}
+.cal-pnl{font-size:12px;font-weight:800;color:#EDE8DD;}
+.cal-cell.win .cal-pnl{color:#6FA287;}
+.cal-cell.loss .cal-pnl{color:#C1554A;}
+.cal-count{font-size:8px;color:#8891A0;}
+.cal-week-total{aspect-ratio:1;border-radius:8px;padding:6px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#141922;border:1px solid #2A3140;min-height:64px;}
+.cal-week-total.empty{background:transparent;border-color:transparent;}
+.cal-week-total.win{border-color:#6FA287;background:rgba(111,162,135,.1);}
+.cal-week-total.loss{border-color:#C1554A;background:rgba(193,85,74,.1);}
+.cal-week-label{font-size:8px;color:#8891A0;text-transform:uppercase;}
+.cal-week-pnl{font-size:12px;font-weight:800;}
+.cal-week-total.win .cal-week-pnl{color:#6FA287;}
+.cal-week-total.loss .cal-week-pnl{color:#C1554A;}
+.cal-week-count{font-size:8px;color:#8891A0;}
+@media (max-width:768px){
+  .cal-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .cal-grid{min-width:620px;}
+}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:flex;align-items:center;justify-content:center;}
+.modal-box{background:#0B0E13;border:1px solid #E3A857;padding:24px;max-width:480px;width:90%;max-height:85vh;overflow-y:auto;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.6);}
+.modal-title{font-size:14px;font-weight:700;color:#E3A857;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+
+/* TOASTS */
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{background:#0B0E13;border:1px solid #E3A857;color:#EDE8DD;padding:12px 16px;font-size:11px;min-width:240px;border-radius:2px;box-shadow:0 4px 16px rgba(0,0,0,.6);animation:slideIn .3s ease;}
+.toast.success{border-color:#6FA287;}
+.toast.error{border-color:#C1554A;}
+.toast.info{border-color:#E3A857;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+/* RESPONSIVE */
+@media (max-width:768px){
+  .sidebar{width:50px;}
+  .nav-item .label{display:none;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .header{flex-direction:column;gap:8px;height:auto;}
+  .metrics-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+.hidden{display:none!important;}
+
+/* IMPRESIÓN / EXPORTAR PDF: oculta chrome de la app, deja solo el contenido del dashboard */
+@media print{
+  body{background:#fff;color:#000;overflow:visible;}
+  .header,.sidebar,#toast-container,.modal-overlay,.btn-header{display:none!important;}
+  #app,.container,.main{display:block!important;height:auto!important;overflow:visible!important;}
+  .panel{break-inside:avoid;border-color:#ccc;box-shadow:none;background:#fff;}
+  .metric-card{break-inside:avoid;box-shadow:none;background:#fff;border-color:#ccc;}
+  .metric-label,.panel-title,.stat-label{color:#333!important;}
+  .metric-value,.stat-value{color:#000!important;}
+}
+
+/* TERMINAL MACRO TYPE SYSTEM: mono para UI técnica, serif solo para texto largo (notas) */
+.logo,.modal-title{font-family:'Space Mono',monospace;}
+.btn-header,.nav-item,.nav-title,.metric-label,.metric-value,.metric-change,
+.tab-btn,.panel-title,.panel-subtitle,.rt-table th,.rt-table td,.tag,
+.trade-pair,.trade-info,.form-label,.form-input,.form-select,.btn,
+.stat-label,.stat-value,.status-item,.pnl-pos,.pnl-neg,.trade-pnl,
+.toast,.heatmap-cell{font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">
+        ⚡ TERMINAL PRO
+        <small>Enterprise Trading Journal v2.1</small>
+      </div>
+      <div class="status-bar">
+        <div class="status-item">
+          <span class="dot"></span>
+          <span>Conectado</span>
+        </div>
+        <div class="status-item">
+          <span id="status-trades">0 trades</span>
+        </div>
+        <div class="status-item">
+          <span id="status-pl">P&L: $0</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-header" onclick="openMacroTerminal()">🖥️ Terminal Macro</button>
+      <button class="btn-header" onclick="exportData('csv')">📊 CSV</button>
+      <button class="btn-header" onclick="window.print()">📄 PDF</button>
+      <button class="btn-header" onclick="exportData('json')">💾 Backup</button>
+      <button class="btn-header primary" onclick="toggleFormModal()">➕ New Trade</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="sidebar">
+      <div class="nav-group">
+        <div class="nav-title">📈 Navegación</div>
+        <div class="nav-item active" onclick="setTab('dashboard')"><span class="icon">📊</span><span class="label">Dashboard</span></div>
+        <div class="nav-item" onclick="setTab('journal')"><span class="icon">📝</span><span class="label">Journal</span></div>
+        <div class="nav-item" onclick="setTab('analysis')"><span class="icon">📉</span><span class="label">Análisis</span></div>
+        <div class="nav-item" onclick="setTab('combinations')"><span class="icon">🔗</span><span class="label">Combinaciones</span></div>
+        <div class="nav-item" onclick="setTab('goals')"><span class="icon">🎯</span><span class="label">Metas</span></div>
+        <div class="nav-item" onclick="setTab('stats')"><span class="icon">📊</span><span class="label">Estadísticas</span></div>
+        <div class="nav-item" onclick="setTab('risk')"><span class="icon">⚠️</span><span class="label">Riesgo</span></div>
+        <div class="nav-item" onclick="setTab('accounts')"><span class="icon">💰</span><span class="label">Cuentas</span></div>
+        <div class="nav-item" onclick="setTab('gallery')"><span class="icon">🖼️</span><span class="label">Galería</span></div>
+        <div class="nav-item" onclick="setTab('settings')"><span class="icon">⚙️</span><span class="label">Config</span></div>
+      </div>
+    </div>
+
+    <div class="main" id="content">
+      <!-- Dinámico -->
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- MODAL DETALLE DE DÍA (calendario) -->
+<div id="day-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title" id="day-modal-title">Trades del día</div>
+    <div id="day-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeDayModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM -->
+<div id="form-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title">Registrar Nuevo Trade</div>
+    <div class="form-group">
+      <label class="form-label">Cuenta</label>
+      <select id="trade_account" class="form-select" onchange="onTradeAccountChange()">
+        <option value="">-- Selecciona una cuenta --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" id="trade_date" class="form-input">
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Par</label>
+        <input type="text" id="trade_pair" class="form-input" placeholder="EURUSD">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lado</label>
+        <select id="trade_side" class="form-select">
+          <option>LONG</option>
+          <option>SHORT</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Entrada</label>
+        <input type="number" id="trade_entry" class="form-input" step="0.00001" placeholder="1.1000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Salida</label>
+        <input type="number" id="trade_exit" class="form-input" step="0.00001" placeholder="1.1050">
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Cantidad</label>
+        <input type="number" id="trade_qty" class="form-input" placeholder="1.0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sesión</label>
+        <select id="trade_session" class="form-select">
+          <option>NY AM</option>
+          <option>London</option>
+          <option>London + NY</option>
+          <option>Asia</option>
+          <option>NY PM</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ganancia Neta ($) <span style="color:#8891A0;font-weight:400;">— opcional: si la escribes, se usa ESTA en vez de calcularla con Entrada/Salida/Cantidad</span></label>
+      <input type="number" id="trade_profit_usd" class="form-input" step="0.01" placeholder="Ej: 45.20 (déjalo vacío para calcular automático)">
+    </div>
+    <div class="form-group" id="trade_cost_group" style="display:none;">
+      <label class="form-label">Comisión + Swap ($) <span style="color:#8891A0;font-weight:400;">— costo real de ESTE trade (se descuenta del profit)</span></label>
+      <input type="number" id="trade_cost" class="form-input" step="0.01" placeholder="Ej: 2.30" oninput="this.dataset.userEdited='1'">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Riesgo del Trade ($) <span style="color:#8891A0;font-weight:400;">— opcional, para R Multiple</span></label>
+      <input type="number" id="trade_risk" class="form-input" step="0.01" placeholder="Ej: 100 (lo que arriesgabas si tocaba el SL)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">R Máximo Alcanzado <span style="color:#8891A0;font-weight:400;">— opcional, cuánto corrió a favor antes de cerrar</span></label>
+      <input type="number" id="trade_max_r" class="form-input" step="0.1" placeholder="Ej: 3 (si llegó a correr 3R aunque cerraste antes)">
+    </div>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label class="form-label">Cómo cerraste</label>
+        <select id="trade_exit_type" class="form-select">
+          <option value="tp">🎯 Take Profit fijo</option>
+          <option value="be">⚖️ Breakeven (cerré en cero tras mover SL)</option>
+          <option value="trailing">📉 Trailing Stop</option>
+          <option value="manual">✋ Cierre manual/discrecional</option>
+          <option value="sl">🛑 Stop Loss</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">RR Planeado <span style="color:#8891A0;font-weight:400;">— ej: 2 para 1:2</span></label>
+        <input type="number" id="trade_rr_planned" class="form-input" step="0.1" placeholder="Ej: 2">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Modelo/Estrategia</label>
+      <input type="text" id="trade_model" class="form-input" placeholder="Trendline, MA Cross...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Timeframe</label>
+      <input type="text" id="trade_tf" class="form-input" placeholder="H1, D1, 4H">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Link del Gráfico <span style="color:#8891A0;font-weight:400;">— opcional, TradingView u otro</span></label>
+      <input type="url" id="trade_chart_url" class="form-input" placeholder="https://www.tradingview.com/x/...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <textarea id="trade_notes" class="form-textarea" placeholder="Análisis, setup, por qué..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="toggleFormModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTrade()">Guardar Trade</button>
+    </div>
+  </div>
+</div>
+
+<div id="account-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="modal-title">Editar Cuenta</div>
+    <div class="form-group">
+      <label class="form-label">Nombre de la Cuenta</label>
+      <input type="text" id="acc_edit_name" class="form-input">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Broker</label>
+      <select id="acc_edit_broker" class="form-select">
+        <option>Binance</option>
+        <option>Oanda</option>
+        <option>IC Markets</option>
+        <option>FTMO</option>
+        <option>Bybit</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Balance Actual ($)</label>
+      <input type="number" id="acc_edit_balance" class="form-input" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo</label>
+      <select id="acc_edit_type" class="form-select" onchange="toggleAccCostField('acc_edit_type','acc_edit_cost_group')">
+        <option>Live</option>
+        <option>Demo</option>
+        <option>Fondeada</option>
+      </select>
+    </div>
+    <div class="form-group" id="acc_edit_cost_group">
+      <label class="form-label">Costo promedio por trade ($) — comisión + swap/spread</label>
+      <input type="number" id="acc_edit_cost" class="form-input" step="0.01" placeholder="Ej: 1.50">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAccountModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAccountEdit()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let trades = JSON.parse(localStorage.getItem('tj_trades') || '[]');
+let accounts = JSON.parse(localStorage.getItem('tj_accounts') || '[]');
+let settings = JSON.parse(localStorage.getItem('tj_settings') || '{"monthlyGoal":1000,"maxDrawdownPct":5,"maxRiskPerTrade":2}');
+let macroData = JSON.parse(localStorage.getItem('tj_macro') || '{"dxy":"neutral","vix":"neutral","yield2y":0,"yield10y":0,"tips":0,"indicators":[]}');
+let tab = 'dashboard';
+let calMonthCursor = new Date(); // mes visible en el calendario mensual del dashboard
+function changeCalMonth(delta){ calMonthCursor.setMonth(calMonthCursor.getMonth()+delta); render(); }
+function goCalToday(){ calMonthCursor = new Date(); render(); }
+let selectedAccount = null; // Account filter
+let dateFrom = null; // Journal date range filter
+let dateTo = null;
+let journalSearch = ''; // Journal search text
+
+// ========== UTILITIES ==========
+function showToast(msg, type='success') {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+function setTab(t) { tab = t; render(); }
+
+function showDayTrades(dStr) {
+  const dayTrades = getFilteredTrades().filter(t => t.date === dStr);
+  const total = dayTrades.reduce((s, t) => s + netProfit(t), 0);
+  document.getElementById('day-modal-title').textContent = `Trades del ${dStr} — ${total >= 0 ? '+' : ''}$${total.toFixed(2)}`;
+  document.getElementById('day-modal-body').innerHTML = dayTrades.map(t => {
+    const p = netProfit(t);
+    return `<div class="trade-card ${p > 0 ? '' : p < 0 ? 'loss' : 'be'}">
+      <div class="trade-pnl">${p >= 0 ? '+' : ''}$${p.toFixed(2)}</div>
+      <div>
+        <div class="trade-meta"><span class="trade-pair">${t.pair}</span><span class="trade-info">${t.side} · ${t.session||''} · ${t.model||''}</span></div>
+        ${t.notes ? `<div class="trade-notes">${t.notes}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty">Sin trades ese día</div>`;
+  document.getElementById('day-modal').classList.remove('hidden');
+}
+function closeDayModal() {
+  document.getElementById('day-modal').classList.add('hidden');
+}
+
+function toggleFormModal(isEdit = false) {
+  const modal = document.getElementById('form-modal');
+  modal.classList.toggle('hidden');
+  if (!modal.classList.contains('hidden')) {
+    // Llenar opciones de cuenta
+    const accSelect = document.getElementById('trade_account');
+    accSelect.innerHTML = '<option value="">-- Selecciona una cuenta --</option>' + 
+      accounts.map(a => `<option value="${a.id}">${a.name} ($${a.currentBalance || a.startBalance})</option>`).join('');
+
+    if (!isEdit) {
+      // Reset completo del formulario para un trade nuevo (evita arrastrar datos de una edición anterior)
+      ['trade_pair','trade_entry','trade_exit','trade_qty','trade_risk','trade_max_r','trade_model','trade_tf','trade_notes','trade_rr_planned','trade_cost','trade_chart_url','trade_profit_usd'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      delete document.getElementById('trade_cost').dataset.userEdited;
+      document.getElementById('trade_side').value = 'LONG';
+      document.getElementById('trade_session').value = 'NY AM';
+      document.getElementById('trade_exit_type').value = 'manual';
+      document.getElementById('trade_date').valueAsDate = new Date();
+      if (selectedAccount) accSelect.value = selectedAccount;
+      onTradeAccountChange();
+
+      // Restaurar título y botón de guardado por si quedaron modificados por una edición previa
+      document.querySelector('.modal-box .modal-title').textContent = 'Registrar Nuevo Trade';
+      const saveBtn = document.querySelector('.modal-box .btn-primary');
+      const freshBtn = saveBtn.cloneNode(true);
+      freshBtn.textContent = 'Guardar Trade';
+      freshBtn.onclick = () => saveTrade();
+      saveBtn.parentElement.replaceChild(freshBtn, saveBtn);
+    } else {
+      if (selectedAccount) accSelect.value = selectedAccount;
+    }
+  }
+}
+
+function saveTrades() { localStorage.setItem('tj_trades', JSON.stringify(trades)); }
+function saveAccounts() { localStorage.setItem('tj_accounts', JSON.stringify(accounts)); }
+
+// Costo promedio por trade (comisión + swap/spread) declarado en la cuenta.
+// Solo se descuenta para cuentas Live/Fondeada; en Demo no aplica (no hay costos reales).
+const COST_APPLICABLE_TYPES = ['Live', 'Fondeada'];
+function getTradeCost(t) {
+  const acc = accounts.find(a => a.id == t.accountId);
+  if (!acc || !COST_APPLICABLE_TYPES.includes(acc.type)) return 0;
+  return parseFloat(acc.avgCost) || 0;
+}
+// Promedio REAL de comisiones ya cargadas en trades de esta cuenta (a diferencia de acc.avgCost,
+// que es un número fijo declarado a mano). Se recalcula solo con trades que tienen costo propio
+// registrado (t.cost > 0) - ignora los que cayeron al fallback para no auto-alimentarse de sí mismo.
+function getRealAvgCommission(accountId) {
+  const withCost = trades.filter(t => t.accountId == accountId && t.cost !== undefined && t.cost !== null && t.cost > 0);
+  if (withCost.length === 0) return null;
+  const total = withCost.reduce((sum, t) => sum + t.cost, 0);
+  return { avg: total / withCost.length, count: withCost.length };
+}
+// P&L neto usado en TODAS las estadísticas/recomendaciones: profit bruto - costo real del trade.
+// Si el trade no tiene costo propio registrado (trades viejos), cae al promedio de la cuenta como fallback.
+function netProfit(t) {
+  const cost = (t.cost !== undefined && t.cost !== null) ? t.cost : getTradeCost(t);
+  return (t.profit || 0) - cost;
+}
+// Clasificación WIN/LOSS/BE para estadísticas: si marcaste el trade como Breakeven (exitType 'be'),
+// se respeta esa etiqueta aunque el $ neto no sea exactamente 0 (por comisión/swap residual) —
+// así un breakeven nunca se cuenta como ganancia ni como pérdida en winrate, rachas, etc.
+function tradeSign(t) {
+  if (t.exitType === 'be') return 0;
+  const p = netProfit(t);
+  return p > 0 ? 1 : (p < 0 ? -1 : 0);
+}
+function saveSettings() { localStorage.setItem('tj_settings', JSON.stringify(settings)); }
+function setKellyDiv(v) { settings.kellyDiv = parseInt(v) || 4; saveSettings(); render(); }
+
+function saveMacroData() { localStorage.setItem('tj_macro', JSON.stringify(macroData)); }
+
+// ========== CALCULATIONS ==========
+function getFilteredTrades() {
+  // Filtro global (cuenta + rango de fechas) - aplica a Dashboard, Journal, Stats, Analysis, etc.
+  let result = selectedAccount ? trades.filter(t => t.accountId == selectedAccount) : trades;
+  if (dateFrom) result = result.filter(t => t.date >= dateFrom);
+  if (dateTo) result = result.filter(t => t.date <= dateTo);
+  return result;
+}
+
+function getJournalTrades() {
+  // El buscador de texto solo afecta el listado del Journal, no las métricas globales
+  let result = getFilteredTrades();
+  if (journalSearch) {
+    const q = journalSearch.toLowerCase();
+    result = result.filter(t =>
+      (t.pair || '').toLowerCase().includes(q) ||
+      (t.notes || '').toLowerCase().includes(q) ||
+      (t.model || '').toLowerCase().includes(q)
+    );
+  }
+  return result;
+}
+
+function clearJournalFilters() {
+  dateFrom = null; dateTo = null; journalSearch = '';
+  render();
+}
+
+function calculateMetrics(filtered = false) {
+  const tradesToCalc = filtered ? getFilteredTrades() : trades;
+  if (tradesToCalc.length === 0) return {
+    total: 0, wins: 0, losses: 0, breakeven: 0,
+    pnl: 0, avgWin: 0, avgLoss: 0, winRate: 0,
+    profitFactor: 0, sharpe: 0, sortino: 0, maxDD: 0, rrRatio: 0,
+    expectancy: 0, rAvg: 0, rCount: 0, pctR1: 0, avgEfficiency: 0, efficiencyCount: 0,
+    streakType: 'NONE', streakCount: 0, kelly: 0
+  };
+
+  let total = tradesToCalc.length;
+  let pnl = 0, wins = 0, losses = 0, breakeven = 0;
+  let winSum = 0, lossSum = 0;
+  let profitsArray = [];
+  const acc = accounts.find(a => a.id == selectedAccount);
+  const startBalance = parseFloat(acc?.currentBalance || acc?.startBalance || 10000);
+  let currentBalance = startBalance;
+
+  tradesToCalc.forEach(t => {
+    const profit = netProfit(t);
+    pnl += profit;
+    currentBalance += profit;
+    profitsArray.push(profit);
+
+    if (tradeSign(t) > 0) { wins++; winSum += profit; }
+    else if (tradeSign(t) < 0) { losses++; lossSum += Math.abs(profit); }
+    else breakeven++;
+  });
+
+  const winRate = (wins / total * 100).toFixed(1);
+  const avgWin = wins > 0 ? (winSum / wins).toFixed(2) : 0;
+  const avgLoss = losses > 0 ? (lossSum / losses).toFixed(2) : 0;
+  const profitFactor = lossSum > 0 ? (winSum / lossSum).toFixed(2) : winSum > 0 ? 999 : 0;
+
+  // Max Drawdown: peak-to-trough secuencial en orden CRONOLÓGICO (tradesToCalc viene más reciente primero).
+  // El cálculo anterior usaba min/max global sin respetar el orden temporal, lo que podía
+  // sobreestimar (o directamente inventar) el drawdown si el balance mínimo ocurría ANTES del máximo.
+  let ddBalance = startBalance, peakBalance = startBalance, maxDDPct = 0;
+  tradesToCalc.slice().reverse().forEach(t => {
+    ddBalance += netProfit(t);
+    if (ddBalance > peakBalance) peakBalance = ddBalance;
+    const dd = peakBalance > 0 ? ((ddBalance - peakBalance) / peakBalance * 100) : (ddBalance - peakBalance);
+    if (dd < maxDDPct) maxDDPct = dd;
+  });
+  const maxDD = maxDDPct.toFixed(2);
+
+  // Sharpe simple (volatility-adjusted returns)
+  const mean = profitsArray.length > 0 ? profitsArray.reduce((a, b) => a + b) / profitsArray.length : 0;
+  const variance = profitsArray.length > 1 ? profitsArray.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / profitsArray.length : 0;
+  const stdDev = Math.sqrt(variance) || 1;
+  const sharpe = profitsArray.length > 0 ? (mean / stdDev * Math.sqrt(252)).toFixed(2) : 0; // annualized
+
+  // Sortino (solo penaliza volatilidad a la baja, ignora upside)
+  const downside = profitsArray.filter(p => p < 0);
+  const downsideVariance = downside.length > 0 ? downside.reduce((sum, p) => sum + Math.pow(p, 2), 0) / profitsArray.length : 0;
+  const downsideDev = Math.sqrt(downsideVariance);
+  const sortino = profitsArray.length > 0
+    ? (downsideDev > 0 ? (mean / downsideDev * Math.sqrt(252)).toFixed(2) : (mean > 0 ? '999' : '0.00'))
+    : 0;
+
+  const rrRatio = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : 0;
+
+  // Expectancy en $: valor esperado por operación
+  const expectancy = (pnl / total).toFixed(2);
+
+  // R Multiple: promedio y % de trades con R>=1 (solo cuenta trades con riesgo definido)
+  const rTrades = tradesToCalc.filter(t => t.rMultiple !== null && t.rMultiple !== undefined && !isNaN(t.rMultiple));
+  const rCount = rTrades.length;
+  const rAvg = rCount > 0 ? (rTrades.reduce((s, t) => s + t.rMultiple, 0) / rCount).toFixed(2) : 0;
+  const pctR1 = rCount > 0 ? (rTrades.filter(t => t.rMultiple >= 1).length / rCount * 100).toFixed(1) : 0;
+
+  // Eficiencia de captura: de los trades donde registraste cuánto R llegó a correr a favor,
+  // qué % de ese movimiento realmente capturaste al cerrar. Ayuda a ver si sales muy temprano.
+  const efficiencyTrades = rTrades.filter(t => t.maxRMultiple !== null && t.maxRMultiple !== undefined && !isNaN(t.maxRMultiple) && t.maxRMultiple > 0);
+  const efficiencyCount = efficiencyTrades.length;
+  const avgEfficiency = efficiencyCount > 0
+    ? (efficiencyTrades.reduce((s, t) => s + Math.min(1, Math.max(0, t.rMultiple / t.maxRMultiple)), 0) / efficiencyCount * 100).toFixed(1)
+    : 0;
+
+  // Racha actual: cuenta trades consecutivos del mismo signo empezando por el más reciente (trades[0])
+  let streakType = 'NONE', streakCount = 0;
+  if (tradesToCalc.length > 0) {
+    const firstSign = tradeSign(tradesToCalc[0]);
+    if (firstSign !== 0) {
+      streakType = firstSign > 0 ? 'WIN' : 'LOSS';
+      for (const t of tradesToCalc) {
+        const s = tradeSign(t);
+        if ((streakType === 'WIN' && s > 0) || (streakType === 'LOSS' && s < 0)) streakCount++;
+        else break;
+      }
+    } else {
+      streakType = 'BE';
+      streakCount = 1;
+    }
+  }
+
+  // Kelly Criterion: % óptimo del capital a arriesgar por trade según tu winrate y RR real (avgWin/avgLoss).
+  // Fórmula: W - (1-W)/R. Se recorta a [0, 100] y se sugiere Kelly/4 o Kelly/2 como uso práctico (full Kelly es muy agresivo).
+  const wR = wins / total;
+  const rrForKelly = parseFloat(rrRatio) || 0;
+  let kelly = 0;
+  if (rrForKelly > 0) kelly = (wR - (1 - wR) / rrForKelly) * 100;
+  kelly = Math.max(0, Math.min(100, kelly));
+
+  return { total, wins, losses, breakeven, pnl: parseFloat(pnl.toFixed(2)), 
+           avgWin, avgLoss, winRate, profitFactor, sharpe, sortino, maxDD, rrRatio,
+           expectancy, rAvg, rCount, pctR1, avgEfficiency, efficiencyCount, streakType, streakCount,
+           kelly: kelly.toFixed(1) };
+}
+
+function calculateByPair() {
+  const tradesToCalc = getFilteredTrades();
+  const data = {};
+  tradesToCalc.forEach(t => {
+    if (!data[t.pair]) data[t.pair] = { count: 0, pnl: 0, wins: 0 };
+    data[t.pair].count++;
+    data[t.pair].pnl += netProfit(t);
+    if (tradeSign(t) > 0) data[t.pair].wins++;
+  });
+  return Object.entries(data).map(([pair, stats]) => {
+    const confidence = getConfidence(stats.count);
+    return { pair, ...stats, wr: (stats.wins / stats.count * 100).toFixed(1), confidence: confidence.level, confidenceLabel: confidence.label };
+  }).sort((a, b) => b.pnl - a.pnl);
+}
+
+function calculateBySession() {
+  const tradesToCalc = getFilteredTrades();
+  const data = {};
+  tradesToCalc.forEach(t => {
+    if (!data[t.session]) data[t.session] = { count: 0, pnl: 0, wins: 0 };
+    data[t.session].count++;
+    data[t.session].pnl += netProfit(t);
+    if (tradeSign(t) > 0) data[t.session].wins++;
+  });
+  return Object.entries(data).map(([session, stats]) => {
+    const confidence = getConfidence(stats.count);
+    return { session, ...stats, wr: (stats.wins / stats.count * 100).toFixed(1), confidence: confidence.level, confidenceLabel: confidence.label };
+  });
+}
+
+// Desempeño por día de la semana (Lun-Dom), derivado del campo fecha ya guardado — no requiere datos nuevos.
+const WEEKDAY_LABELS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+function calculateByWeekday() {
+  const tradesToCalc = getFilteredTrades();
+  const data = {};
+  tradesToCalc.forEach(t => {
+    const d = new Date(t.date + 'T00:00:00');
+    const wd = WEEKDAY_LABELS[d.getDay()];
+    if (!data[wd]) data[wd] = { count: 0, pnl: 0, wins: 0 };
+    data[wd].count++;
+    data[wd].pnl += netProfit(t);
+    if (tradeSign(t) > 0) data[wd].wins++;
+  });
+  // Orden fijo Lunes -> Domingo para que se lea como calendario
+  const order = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  return order.filter(d => data[d]).map(d => {
+    const stats = data[d];
+    const confidence = getConfidence(stats.count);
+    return { weekday: d, ...stats, wr: (stats.wins / stats.count * 100).toFixed(1), confidence: confidence.level, confidenceLabel: confidence.label };
+  });
+}
+
+const EXIT_TYPE_LABELS = { tp: '🎯 Take Profit', be: '⚖️ Breakeven', trailing: '📉 Trailing Stop', manual: '✋ Manual', sl: '🛑 Stop Loss' };
+
+// Agrupa por cómo se cerró el trade (TP fijo / Breakeven / Trailing / Manual / SL)
+function calculateByExitType() {
+  const tradesToCalc = getFilteredTrades().filter(t => t.exitType);
+  const data = {};
+  tradesToCalc.forEach(t => {
+    if (!data[t.exitType]) data[t.exitType] = { count: 0, pnl: 0, wins: 0, rSum: 0, rCount: 0 };
+    const d = data[t.exitType];
+    d.count++;
+    d.pnl += netProfit(t);
+    if (tradeSign(t) > 0) d.wins++;
+    if (t.rMultiple !== null && t.rMultiple !== undefined && !isNaN(t.rMultiple)) { d.rSum += t.rMultiple; d.rCount++; }
+  });
+  return Object.entries(data).map(([exitType, s]) => {
+    const confidence = getConfidence(s.count);
+    return {
+      exitType, label: EXIT_TYPE_LABELS[exitType] || exitType,
+      count: s.count, pnl: s.pnl,
+      wr: (s.wins / s.count * 100).toFixed(1),
+      expectancy: (s.pnl / s.count).toFixed(2),
+      rAvg: s.rCount > 0 ? (s.rSum / s.rCount).toFixed(2) : null,
+      confidence: confidence.level, confidenceLabel: confidence.label
+    };
+  }).sort((a, b) => b.expectancy - a.expectancy);
+}
+
+// Agrupa por RR planeado (redondeado a 0.5 para juntar variaciones tipo 1.9/2.0/2.1)
+function calculateByRRPlanned() {
+  const tradesToCalc = getFilteredTrades().filter(t => t.rrPlanned !== null && t.rrPlanned !== undefined && !isNaN(t.rrPlanned));
+  const data = {};
+  tradesToCalc.forEach(t => {
+    const bucket = (Math.round(t.rrPlanned * 2) / 2).toFixed(1);
+    if (!data[bucket]) data[bucket] = { count: 0, pnl: 0, wins: 0 };
+    data[bucket].count++;
+    data[bucket].pnl += netProfit(t);
+    if (tradeSign(t) > 0) data[bucket].wins++;
+  });
+  return Object.entries(data).map(([rr, s]) => {
+    const confidence = getConfidence(s.count);
+    return {
+      rr, count: s.count, pnl: s.pnl,
+      wr: (s.wins / s.count * 100).toFixed(1),
+      expectancy: (s.pnl / s.count).toFixed(2),
+      confidence: confidence.level, confidenceLabel: confidence.label
+    };
+  }).sort((a, b) => parseFloat(a.rr) - parseFloat(b.rr));
+}
+
+// Insignia visual de confianza reutilizable en cualquier tabla de desempeño agrupado.
+function confidenceBadge(c) {
+  const colors = { alto: '#6FA287', medio: '#E3A857', bajo: '#C1554A', insuficiente: '#8891A0' };
+  const dots = { alto: '●●●', medio: '●●○', bajo: '●○○', insuficiente: '○○○' };
+  return `<span title="${c === 'alto' ? 'Confianza alta (50+)' : c === 'medio' ? 'Confianza media (30-49)' : c === 'bajo' ? 'Confianza baja (10-29)' : 'Muestra insuficiente (<10)'}" style="color:${colors[c]};font-size:10px;letter-spacing:1px;">${dots[c]}</span>`;
+}
+
+// Cruza RR planeado + tipo de salida para encontrar la combinación con mejor expectancy.
+// Niveles de confianza según tamaño de muestra (en vez de un corte binario):
+// <10: insuficiente (ruido, ni para descartar) | 10-29: bajo (solo descarta lo muy malo)
+// 30-49: medio (win rate empieza a estabilizarse) | 50+: alto (expectancy en $ confiable)
+const MIN_SAMPLE = 10;
+const CONFIDENCE_LEVELS = [
+  { min: 50, level: 'alto', label: 'confianza alta' },
+  { min: 30, level: 'medio', label: 'confianza media' },
+  { min: 10, level: 'bajo', label: 'confianza baja' },
+  { min: 0,  level: 'insuficiente', label: 'muestra insuficiente' }
+];
+function getConfidence(count) {
+  return CONFIDENCE_LEVELS.find(c => count >= c.min);
+}
+function calculateByCombo() {
+  const tradesToCalc = getFilteredTrades().filter(t =>
+    t.exitType && t.rrPlanned !== null && t.rrPlanned !== undefined && !isNaN(t.rrPlanned));
+  const data = {};
+  tradesToCalc.forEach(t => {
+    const bucket = (Math.round(t.rrPlanned * 2) / 2).toFixed(1);
+    const key = `${bucket}|${t.exitType}`;
+    if (!data[key]) data[key] = {
+      rr: bucket, exitType: t.exitType, count: 0, pnl: 0, grossPnl: 0, costTotal: 0, wins: 0,
+      rSum: 0, rCount: 0, effSum: 0, effCount: 0
+    };
+    const d = data[key];
+    d.count++;
+    d.pnl += netProfit(t);
+    d.grossPnl += (t.profit || 0);
+    d.costTotal += ((t.cost !== undefined && t.cost !== null) ? t.cost : getTradeCost(t));
+    if (tradeSign(t) > 0) d.wins++;
+    // R realizado promedio (solo trades con riesgo definido)
+    if (t.riskAmount > 0) { d.rSum += netProfit(t) / t.riskAmount; d.rCount++; }
+    // Eficiencia de captura: cuánto del R máximo alcanzado se quedó realmente en el trade
+    if (t.riskAmount > 0 && t.maxRMultiple !== null && t.maxRMultiple !== undefined && !isNaN(t.maxRMultiple) && t.maxRMultiple > 0) {
+      const realizedR = netProfit(t) / t.riskAmount;
+      d.effSum += Math.min(1, Math.max(0, realizedR / t.maxRMultiple));
+      d.effCount++;
+    }
+  });
+  return Object.values(data).map(s => {
+    const confidence = getConfidence(s.count);
+    return {
+      ...s, label: EXIT_TYPE_LABELS[s.exitType] || s.exitType,
+      wr: (s.wins / s.count * 100).toFixed(1),
+      expectancy: parseFloat((s.pnl / s.count).toFixed(2)),
+      confidence: confidence.level,
+      confidenceLabel: confidence.label,
+      reliable: s.count >= MIN_SAMPLE,
+      rAvg: s.rCount > 0 ? parseFloat((s.rSum / s.rCount).toFixed(2)) : null,
+      efficiency: s.effCount > 0 ? parseFloat((s.effSum / s.effCount * 100).toFixed(1)) : null,
+      efficiencyCount: s.effCount,
+      costPct: s.grossPnl > 0 ? parseFloat((s.costTotal / s.grossPnl * 100).toFixed(1)) : null
+    };
+  }).sort((a, b) => b.expectancy - a.expectancy);
+}
+
+// Genera recomendaciones en texto plano a partir de las combinaciones RR+tipo de salida.
+// Solo recomienda con muestra suficiente (MIN_SAMPLE); si nada la alcanza, avisa cuánto falta.
+function generateInsights() {
+  const combos = calculateByCombo();
+  // "reliable" ahora = cualquier combinación con al menos MIN_SAMPLE (10),
+  // pero cada insight declara su nivel de confianza real (bajo/medio/alto)
+  // en vez de tratarlas todas como igual de sólidas.
+  const reliable = combos.filter(c => c.reliable);
+  const insights = [];
+
+  if (reliable.length === 0) {
+    const best = combos[0];
+    const faltan = best ? MIN_SAMPLE - best.count : MIN_SAMPLE;
+    insights.push({
+      type: 'info',
+      text: combos.length === 0
+        ? `Aún no hay trades con RR planeado + tipo de salida registrados. Completa esos dos campos al cargar trades para activar las recomendaciones. Niveles de confianza: 10-29 trades = bajo (solo para descartar lo muy malo), 30-49 = medio (el win rate empieza a estabilizarse), 50+ = alto (expectancy en $ confiable para decidir).`
+        : `Todavía ninguna combinación RR + tipo de salida llega a ${MIN_SAMPLE} trades, el mínimo para entrar al ranking (la más cercana, RR 1:${best.rr} + ${best.label}, tiene ${best.count}, le faltan ${faltan}). Sigue registrando así antes de sacar conclusiones — con menos de ${MIN_SAMPLE} el resultado puede ser puro ruido. Luego, mientras más trades sumes, más confianza tendrás: 10-29 = bajo, 30-49 = medio, 50+ = alto.`
+    });
+  } else {
+    const bestCombo = reliable[0];
+    const worstCombo = reliable[reliable.length - 1];
+    const bestConfNote = bestCombo.confidence === 'alto'
+      ? 'Es tu setup más consistente hasta ahora.'
+      : bestCombo.confidence === 'medio'
+        ? 'Empieza a ser confiable, pero súmale más trades antes de apostarle todo.'
+        : 'Ojo: con esta muestra solo sirve para descartar que sea mala, no para confirmar que es la mejor. Necesitas 30+ (ideal 50+) para confiar en el número.';
+    const bestEffNote = bestCombo.efficiency !== null
+      ? ` Tu eficiencia de captura aquí es ${bestCombo.efficiency}% (sobre ${bestCombo.efficiencyCount} trades con R máximo registrado)${bestCombo.efficiency < 50 ? ' — bajo. Estás dejando más de la mitad del movimiento en la mesa; si ajustas tu salida (trailing más flojo o TP más lejos) esta combinación podría rendir bastante más de lo que ya muestra.' : bestCombo.efficiency < 75 ? ', razonable pero con espacio para capturar más.' : ', muy buena captura del movimiento disponible.'}`
+      : '';
+    const bestCostNote = bestCombo.costPct !== null && bestCombo.costPct > 0
+      ? ` El costo (comisión+swap) te resta ${bestCombo.costPct}% del profit bruto en esta combinación.`
+      : '';
+    insights.push({
+      type: 'good',
+      text: `Con ${bestCombo.count} trades de muestra (${bestCombo.confidenceLabel}), tu mejor combinación es RR 1:${bestCombo.rr} + ${bestCombo.label}: expectancy de $${bestCombo.expectancy}/trade y ${bestCombo.wr}% de win rate. ${bestConfNote}${bestEffNote}${bestCostNote}`
+    });
+    if (worstCombo.exitType !== bestCombo.exitType || worstCombo.rr !== bestCombo.rr) {
+      const worstConfNote = worstCombo.confidence === 'bajo'
+        ? ' (muestra chica, tómalo como alerta temprana, no como veredicto final)'
+        : '';
+      insights.push({
+        type: worstCombo.expectancy < 0 ? 'bad' : 'info',
+        text: `Tu combinación más débil con muestra suficiente es RR 1:${worstCombo.rr} + ${worstCombo.label}: expectancy de $${worstCombo.expectancy}/trade en ${worstCombo.count} trades (${worstCombo.confidenceLabel})${worstConfNote}. ${worstCombo.expectancy < 0 ? 'Considera reducirla o dejar de usarla en ese RR.' : 'No es mala, pero rinde menos que tu mejor combinación.'}`
+      });
+    }
+    // Resumen completo: todas las combinaciones con muestra suficiente, ranking + confianza,
+    // para que el consejo no se quede solo en la mejor/peor sino en el panorama entero.
+    if (reliable.length > 2) {
+      const ranking = reliable
+        .map((c, i) => `${i + 1}) RR 1:${c.rr} + ${c.label}: $${c.expectancy}/trade, ${c.wr}% WR, ${c.count} trades (${c.confidenceLabel})`)
+        .join(' | ');
+      insights.push({
+        type: 'info',
+        text: `Ranking completo de combinaciones con muestra suficiente (${reliable.length}): ${ranking}.`
+      });
+    }
+    // Combinaciones que todavía no llegan a MIN_SAMPLE: quedan fuera del ranking pero vale la pena saber qué falta.
+    const pending = combos.filter(c => !c.reliable);
+    if (pending.length > 0) {
+      const pendingList = pending
+        .sort((a, b) => (MIN_SAMPLE - a.count) - (MIN_SAMPLE - b.count))
+        .map(c => `RR 1:${c.rr} + ${c.label} (${c.count}/${MIN_SAMPLE})`)
+        .join(', ');
+      insights.push({
+        type: 'info',
+        text: `Combinaciones aún sin muestra suficiente para entrar al ranking: ${pendingList}. Si te interesan, sigue registrándolas.`
+      });
+    }
+
+    const byRR = {};
+    reliable.forEach(c => { (byRR[c.rr] = byRR[c.rr] || []).push(c); });
+    Object.values(byRR).forEach(group => {
+      if (group.length >= 2) {
+        const sorted = [...group].sort((a, b) => b.expectancy - a.expectancy);
+        const top = sorted[0], bottom = sorted[sorted.length - 1];
+        if (top.expectancy > bottom.expectancy) {
+          insights.push({
+            type: 'good',
+            text: `Al mismo RR 1:${top.rr}, ${top.label} rindió mejor que ${bottom.label} ($${top.expectancy} vs $${bottom.expectancy} de expectancy). En ese RR, prioriza ${top.label.replace(/^[^\s]+\s/, '')}.`
+          });
+        }
+      }
+    });
+    // Comparación directa: mismo exitType, distinto RR (para ver si conviene bajar/subir el RR objetivo)
+    const byExit = {};
+    reliable.forEach(c => { (byExit[c.exitType] = byExit[c.exitType] || []).push(c); });
+    Object.values(byExit).forEach(group => {
+      if (group.length >= 2) {
+        const sorted = [...group].sort((a, b) => b.expectancy - a.expectancy);
+        const top = sorted[0], bottom = sorted[sorted.length - 1];
+        if (top.expectancy > bottom.expectancy && top.rr !== bottom.rr) {
+          insights.push({
+            type: 'good',
+            text: `Con ${top.label}, bajar/subir el RR objetivo a 1:${top.rr} dio mejor resultado que 1:${bottom.rr} ($${top.expectancy} vs $${bottom.expectancy} de expectancy).`
+          });
+        }
+      }
+    });
+
+    // Eficiencia de captura: combinaciones donde estás dejando mucho movimiento en la mesa
+    // (usa R máximo alcanzado vs R realmente capturado). Esto es independiente de si la
+    // combinación ya es "buena" en expectancy — te dice si podría ser AÚN mejor con mejor manejo de salida.
+    const withEfficiency = reliable.filter(c => c.efficiency !== null && c.efficiencyCount >= 5);
+    if (withEfficiency.length > 0) {
+      const lowEff = [...withEfficiency].sort((a, b) => a.efficiency - b.efficiency)[0];
+      if (lowEff.efficiency < 55) {
+        insights.push({
+          type: 'bad',
+          text: `Baja eficiencia de captura en RR 1:${lowEff.rr} + ${lowEff.label}: solo ${lowEff.efficiency}% del movimiento máximo disponible (${lowEff.efficiencyCount} trades medidos). Estás cerrando muy pronto respecto a lo que el precio realmente daba. Antes de cambiar de RR o tipo de salida, prueba dejar correr más esa combinación — el edge ya está ahí, te falta capturarlo.`
+        });
+      }
+      const highEff = [...withEfficiency].sort((a, b) => b.efficiency - a.efficiency)[0];
+      if (highEff.efficiency >= 75 && highEff.rr !== lowEff.rr) {
+        insights.push({
+          type: 'good',
+          text: `Mejor eficiencia de captura en RR 1:${highEff.rr} + ${highEff.label}: ${highEff.efficiency}% del movimiento máximo capturado (${highEff.efficiencyCount} trades medidos). Tu manejo de salida en esta combinación es sólido — es un buen modelo a replicar en las combinaciones con eficiencia baja.`
+        });
+      }
+    }
+
+    // Arrastre de costos: si alguna combinación reliable pierde mucho expectancy por comisión+swap,
+    // conviene saberlo — puede ser la diferencia entre rentable y no rentable en cuentas Live/Fondeada.
+    const withCost = reliable.filter(c => c.costPct !== null && c.costPct > 0);
+    if (withCost.length > 0) {
+      const highestCost = [...withCost].sort((a, b) => b.costPct - a.costPct)[0];
+      if (highestCost.costPct >= 15) {
+        insights.push({
+          type: 'bad',
+          text: `Arrastre de costos alto en RR 1:${highestCost.rr} + ${highestCost.label}: comisión+swap te come ${highestCost.costPct}% del profit bruto. Si esta combinación hace muchos trades chicos, revisa si el tamaño de posición o la frecuencia justifica el costo — podrías estar ganando en bruto pero perdiendo terreno neto frente a otra combinación con menos operaciones.`
+        });
+      }
+    }
+
+    // Consistencia: combinación con mejor expectancy pero R realizado promedio bajo vs su RR planeado
+    // indica que rara vez llegas al objetivo completo, aunque el resultado promedio siga siendo positivo.
+    if (bestCombo.rAvg !== null) {
+      const rrTarget = parseFloat(bestCombo.rr);
+      if (bestCombo.rAvg < rrTarget * 0.5) {
+        insights.push({
+          type: 'info',
+          text: `En tu mejor combinación (RR 1:${bestCombo.rr} + ${bestCombo.label}), el R realizado promedio es ${bestCombo.rAvg}R — bien por debajo del objetivo de ${rrTarget}R. Sigue siendo tu combinación más rentable, pero rara vez alcanzas el TP completo; probablemente ganas por win rate más que por tamaño de ganador. Vale la pena revisar si un RR más conservador te daría resultados similares con menos varianza.`
+        });
+      }
+    }
+  }
+  return insights;
+}
+
+
+function calculateByModel() {
+  const tradesToCalc = getFilteredTrades();
+  const data = {};
+  tradesToCalc.forEach(t => {
+    const model = t.model || 'Sin asignar';
+    if (!data[model]) data[model] = { count: 0, pnl: 0, wins: 0, winSum: 0, lossSum: 0, losses: 0 };
+    const p = netProfit(t);
+    data[model].count++;
+    data[model].pnl += p;
+    if (tradeSign(t) > 0) { data[model].wins++; data[model].winSum += p; }
+    else if (tradeSign(t) < 0) { data[model].losses++; data[model].lossSum += Math.abs(p); }
+  });
+  return Object.entries(data).map(([model, stats]) => {
+    const confidence = getConfidence(stats.count);
+    const wr = stats.wins / stats.count;
+    const avgWin = stats.wins > 0 ? stats.winSum / stats.wins : 0;
+    const avgLoss = stats.losses > 0 ? stats.lossSum / stats.losses : 0;
+    const rr = avgLoss > 0 ? avgWin / avgLoss : 0;
+    let kelly = rr > 0 ? (wr - (1 - wr) / rr) * 100 : 0;
+    kelly = Math.max(0, Math.min(100, kelly));
+    return { model, ...stats, wr: (wr * 100).toFixed(1), confidence: confidence.level, confidenceLabel: confidence.label, kelly: kelly.toFixed(1) };
+  }).sort((a, b) => b.pnl - a.pnl);
+}
+
+// ========== COMBINACIONES + METAS + ALERTAS ==========
+function calculateCombinations(){const t=getFilteredTrades(),a={};return t.forEach(e=>{const c=`${e.pair}|${e.session||"Unknown"}|${e.model||"N/A"}`;a[c]||(a[c]={pair:e.pair,session:e.session||"Unknown",model:e.model||"N/A",count:0,pnl:0,wins:0,losses:0,trades:[],byDate:{}});const n=netProfit(e);a[c].count++,a[c].pnl+=n,n>0&&a[c].wins++,n<0&&a[c].losses++,a[c].trades.push(e);const i=e.date;a[c].byDate[i]||(a[c].byDate[i]={count:0,pnl:0,wins:0}),a[c].byDate[i].count++,a[c].byDate[i].pnl+=n,n>0&&a[c].byDate[i].wins++}),Object.values(a).map(e=>{let t=0,c=0,n=0;const i=e.trades.map(netProfit);return i.forEach(a=>{a>0?(n++,t=Math.max(t,n),c=0):a<0&&(c++,t=Math.max(t,c),n=0)}),{...e,wr:e.count?((e.wins/e.count)*100).toFixed(1):0,maxDD:c?((n/c)*100).toFixed(1):0,maxWinStreak:t}}).sort((e,a)=>a.pnl-e.pnl)}
+function calculateMonthlyGoalByAccount(){const e=new Date().toISOString().slice(0,7),t={};return accounts.forEach(a=>{const c=trades.filter(t=>t.accountId===a.id&&t.date.startsWith(e)).reduce((e,a)=>e+netProfit(a),0),n=a.monthlyGoal||500;t[a.id]={account:a.name,pnl:c.toFixed(2),goal:n,remaining:(n-c).toFixed(2),pct:((c/n)*100).toFixed(1)}}),t}
+function checkRiskAlert(e){const t=parseFloat(e.riskAmount)||0,a=accounts.find(a=>a.id===e.accountId);if(t>0&&a){const c=(t/(a.balance||1e3))*100;if(c>5)return[{type:"danger",msg:`⚠️ RIESGO ALTO: ${c.toFixed(2)}% del balance. Máximo: 2%`}];if(c>2)return[{type:"warn",msg:`⚠️ Riesgo moderado: ${c.toFixed(2)}%`}]}const n=parseFloat(e.rrPlanned)||0;if(n<1)return[{type:"warn",msg:`📊 RR < 1:1 (${n}). Ajusta TP/SL.`}];const i=parseFloat(e.profit)||0,s=parseFloat(e.cost)||0;return i>0&&s/i>0.1?[{type:"warn",msg:`💸 Costos altos: ${((s/i)*100).toFixed(1)}% del profit`}]:[]}
+
+// ========== RENDERING ==========
+function render() {
+  // filtered=true: respeta el filtro de cuenta/fechas/búsqueda activo, igual que el resto de paneles
+  const metrics = calculateMetrics(true);
+  const content = document.getElementById('content');
+
+  // Update header
+  document.getElementById('status-trades').textContent = `${metrics.total} trades`;
+  document.getElementById('status-pl').textContent = `P&L: $${metrics.pnl}`;
+
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.remove('active');
+    if (i === ['dashboard','journal','analysis','combinations','goals','stats','risk','accounts','gallery','settings'].indexOf(tab)) el.classList.add('active');
+  });
+
+  // Active tab
+  const tabs = {
+    dashboard: renderDashboard,
+    journal: renderJournal,
+    analysis: renderAnalysis,
+    combinations: renderCombinations,
+    goals: renderGoals,
+    stats: renderStats,
+    risk: renderRisk,
+    accounts: renderAccounts,
+    gallery: renderGallery,
+    settings: renderSettings
+  };
+
+  content.innerHTML = tabs[tab] ? tabs[tab](metrics) : renderDashboard(metrics);
+
+  // El canvas del gráfico se recrea en cada render, así que hay que re-instanciar Chart.js
+  if (tab === 'dashboard' || tab === 'stats' || tab === 'accounts' || tab === 'combinations') renderCharts();
+}
+
+function metricRing(label, value, change, pct, color, ringLabel) {
+  pct = Math.max(0, Math.min(100, isFinite(pct) ? pct : 0));
+  const valueClass = color === '#6FA287' ? 'positive' : (color === '#C1554A' ? 'negative' : 'neutral');
+  return `<div class="metric-card ringed">
+    <div>
+      <div class="metric-label">${label}</div>
+      <div class="metric-value ${valueClass}">${value}</div>
+      <div class="metric-change">${change}</div>
+    </div>
+    <div class="metric-ring" style="background:conic-gradient(${color} ${pct}%, #2A3140 0);"><span>${ringLabel}</span></div>
+  </div>`;
+}
+
+function renderDashboard(m) {
+  const byPair = calculateByPair();
+  const tradesToCalc = getFilteredTrades();
+  const pnlTrend = tradesToCalc.slice(-30).map((t, i) => tradesToCalc.slice(0, i + 1).reduce((s, x) => s + netProfit(x), 0));
+
+  const lastBackup = localStorage.getItem('tj_last_backup');
+  const daysSinceBackup = lastBackup ? Math.floor((Date.now() - new Date(lastBackup).getTime()) / 86400000) : null;
+  const needsBackup = trades.length > 0 && (daysSinceBackup === null || daysSinceBackup >= 7);
+  const backupBanner = needsBackup ? `
+    <div style="margin-bottom:14px;padding:10px 14px;border:1px solid #E3A857;background:rgba(227,168,87,.08);border-radius:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span style="color:#E3A857;font-size:11px;">⚠️ ${daysSinceBackup === null ? 'Nunca has hecho un backup.' : `Tu último backup fue hace ${daysSinceBackup} días.`} Tus datos solo viven en este navegador — si se borra el caché, los pierdes.</span>
+      <button class="btn btn-sm btn-primary" onclick="exportData('json')">💾 Hacer Backup Ahora</button>
+    </div>` : '';
+
+  return `
+    ${backupBanner}
+    <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select class="form-select" style="max-width:220px;" onchange="selectedAccount = this.value === 'ALL' ? null : this.value; render();">
+        <option value="ALL">📊 Todas las Cuentas</option>
+        ${accounts.map(a => `<option value="${a.id}" ${selectedAccount == a.id ? 'selected' : ''}>💰 ${a.name}</option>`).join('')}
+      </select>
+      <input type="date" class="form-input" style="max-width:150px;" value="${dateFrom||''}" onchange="dateFrom=this.value||null;render();" title="Desde">
+      <input type="date" class="form-input" style="max-width:150px;" value="${dateTo||''}" onchange="dateTo=this.value||null;render();" title="Hasta">
+      ${(dateFrom || dateTo) ? `<button class="btn btn-sm" onclick="dateFrom=null;dateTo=null;render();">✕ Limpiar fechas</button>` : ''}
+      ${selectedAccount ? `<span style="padding:9px 10px;background:#0B0E13;border:1px solid #2A3140;border-radius:2px;color:#E3A857;">Filtrando: ${accounts.find(a => a.id == selectedAccount)?.name}</span>` : ''}
+      <span style="margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid #2A3140;background:linear-gradient(155deg,#171A24,#12141C);font-weight:700;font-size:12px;${m.streakType === 'WIN' ? 'color:#6FA287;' : m.streakType === 'LOSS' ? 'color:#C1554A;' : 'color:#E3A857;'}">
+        ${m.streakType === 'WIN' ? '🔥 Racha: ' + m.streakCount + ' ganadas seguidas' : m.streakType === 'LOSS' ? '❄️ Racha: ' + m.streakCount + ' perdidas seguidas' : m.streakType === 'BE' ? '⚖️ Última: Breakeven' : '— Sin racha activa'}
+      </span>
+    </div>
+    <div class="metrics-grid">
+      ${metricRing('Total P&L', `$${m.pnl}`, `${m.total} trades`, Math.min(Math.abs(m.pnl)/1000*100,100), m.pnl>=0?'#6FA287':'#C1554A', m.pnl>=0?'▲':'▼')}
+      ${metricRing('Win Rate', `${m.winRate}%`, `${m.wins}W / ${m.losses}L`, m.winRate, '#6FA287', m.winRate+'%')}
+      ${metricRing('Profit Factor', m.profitFactor, 'Expectativa', Math.min(m.profitFactor/3*100,100), m.profitFactor>=1.5?'#6FA287':'#E3A857', m.profitFactor)}
+      ${metricRing('Sharpe Ratio', m.sharpe, 'Risk-Adjusted', Math.min(Math.abs(m.sharpe)/3*100,100), m.sharpe>=1?'#6FA287':'#E3A857', m.sharpe)}
+      ${metricRing('Sortino Ratio', m.sortino, 'Downside Risk', Math.min(Math.abs(m.sortino)/3*100,100), m.sortino>=1?'#6FA287':'#E3A857', m.sortino)}
+      ${metricRing('Max Drawdown', `${m.maxDD}%`, 'Peak to Trough', m.maxDD, '#C1554A', m.maxDD+'%')}
+      ${metricRing('Risk/Reward', m.rrRatio, 'Ratio', Math.min(m.rrRatio/3*100,100), m.rrRatio>=2?'#6FA287':'#E3A857', m.rrRatio)}
+      ${metricRing('Trades', m.total, 'Total', Math.min(m.total/50*100,100), '#E3A857', m.total)}
+      ${metricRing('Avg Ganancia', `$${m.avgWin}`, `${m.wins} wins`, Math.min(Math.abs(m.avgWin)/200*100,100), '#6FA287', '$'+Math.round(m.avgWin))}
+      ${metricRing('Avg Pérdida', `$${m.avgLoss}`, `${m.losses} losses`, Math.min(Math.abs(m.avgLoss)/200*100,100), '#C1554A', '$'+Math.round(Math.abs(m.avgLoss)))}
+      ${metricRing('Expectancy', `$${m.expectancy}`, 'Esperado / trade', Math.min(Math.abs(m.expectancy)/100*100,100), m.expectancy>=0?'#6FA287':'#C1554A', '$'+Math.round(m.expectancy))}
+      ${metricRing('R Promedio', m.rCount > 0 ? m.rAvg+'R' : 'N/A', `${m.rCount} trades con R`, Math.min(Math.abs(m.rAvg||0)/3*100,100), (m.rAvg||0)>=0?'#6FA287':'#C1554A', m.rCount>0?m.rAvg:'—')}
+      ${metricRing('% Trades R≥1', m.rCount > 0 ? m.pctR1+'%' : 'N/A', 'Sobre trades con R', m.rCount>0?m.pctR1:0, '#8B5CF6', m.rCount>0?m.pctR1+'%':'—')}
+      ${metricRing('Eficiencia Captura', m.efficiencyCount > 0 ? m.avgEfficiency+'%' : 'N/A', m.efficiencyCount > 0 ? m.efficiencyCount+' trades c/R máx' : 'Sin datos', m.efficiencyCount>0?m.avgEfficiency:0, m.avgEfficiency>=60?'#6FA287':'#E3A857', m.efficiencyCount>0?m.avgEfficiency+'%':'—')}
+      ${metricRing('Kelly Criterion', `${m.kelly}%`, `<select onchange="setKellyDiv(this.value)" style="background:#1B212C;color:inherit;border:1px solid #2A3140;border-radius:4px;padding:1px 4px;font:inherit;cursor:pointer;">${[2,4,6,8].map(d => `<option value="${d}" ${(settings.kellyDiv||4)===d?'selected':''}>1/${d}</option>`).join('')}</select> Kelly: ${(m.kelly/(settings.kellyDiv||4)).toFixed(1)}%`, Math.max(m.kelly,0), m.kelly>0?'#6FA287':'#E3A857', m.kelly+'%')}
+      ${metricRing('Racha Actual', m.streakType === 'WIN' ? '🔥 '+m.streakCount+'W' : m.streakType === 'LOSS' ? '❄️ '+m.streakCount+'L' : m.streakType === 'BE' ? 'BE' : 'N/A', 'Consecutivos', Math.min((m.streakCount||0)/10*100,100), m.streakType==='WIN'?'#6FA287':(m.streakType==='LOSS'?'#C1554A':'#E3A857'), m.streakCount||'—')}
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">📈 P&L Acumulado (últimos 30)</div>
+        <div class="chart-container">
+          <canvas id="pnl-chart"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        ${renderMonthCalendar(tradesToCalc)}
+      </div>
+      <div class="panel">
+        <div class="panel-title">🔷 Puntaje General</div>
+        <div class="chart-container" style="height:220px;">
+          <canvas id="zella-chart"></canvas>
+        </div>
+        <div style="text-align:center;margin-top:4px;">
+          <div style="font-size:22px;font-weight:800;color:#E3A857;">${computeZellaScore(m).overall}</div>
+          <div style="font-size:9px;color:#8891A0;text-transform:uppercase;">Puntaje General</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📅 P&L Mensual</div>
+        <div class="chart-container" style="height:220px;">
+          <canvas id="monthly-chart"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📉 Drawdown desde Máximo</div>
+        <div class="chart-container">
+          <canvas id="dd-chart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">🎯 Desempeño por Par</div>
+        <table class="rt-table">
+          <thead>
+            <tr><th>Par</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Confianza</th></tr>
+          </thead>
+          <tbody>
+            ${byPair.slice(0, 10).map(b => `<tr>
+              <td><b>${b.pair}</b></td>
+              <td>${b.count}</td>
+              <td class="${b.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${b.pnl.toFixed(2)}</td>
+              <td>${b.wr}%</td>
+              <td>${confidenceBadge(b.confidence)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">📊 Últimos 5 Trades</div>
+        ${tradesToCalc.slice(0, 5).map(t => `
+          <div class="trade-card ${tradeSign(t) < 0 ? 'loss' : (tradeSign(t) === 0 ? 'be' : '')}">
+            <div class="trade-pnl">${netProfit(t) >= 0 ? '+' : ''}$${netProfit(t).toFixed(2)}${t.cost ? `<div style="font-size:9px;color:#8891A0;font-weight:400;">(bruto $${(t.profit||0).toFixed(2)} - $${t.cost.toFixed(2)} costo)</div>` : ''}</div>
+            <div>
+              <div class="trade-pair">${t.pair} ${t.side}</div>
+              <div class="trade-info">${t.date} • ${t.session}</div>
+              <div class="trade-notes">${t.notes || 'Sin notas'}</div>
+            </div>
+            <div style="text-align:right;">
+              ${resultTag(t)}
+              <br><span class="tag">${t.model}</span>
+            </div>
+          </div>
+        `).join('') || '<div class="empty">Sin trades</div>'}
+      </div>
+      <div class="panel">
+        <div class="panel-title">⏰ Desempeño por Sesión</div>
+        <table class="rt-table">
+          <thead>
+            <tr><th>Sesión</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Confianza</th></tr>
+          </thead>
+          <tbody>
+            ${calculateBySession().map(s => `<tr>
+              <td><b>${s.session}</b></td>
+              <td>${s.count}</td>
+              <td class="${s.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${s.pnl.toFixed(2)}</td>
+              <td>${s.wr}%</td>
+              <td>${confidenceBadge(s.confidence)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderMonthCalendar(tradesToCalc) {
+  const dailyPnL = {}, dailyCount = {};
+  tradesToCalc.forEach(t => {
+    dailyPnL[t.date] = (dailyPnL[t.date] || 0) + netProfit(t);
+    dailyCount[t.date] = (dailyCount[t.date] || 0) + 1;
+  });
+
+  const year = calMonthCursor.getFullYear();
+  const month = calMonthCursor.getMonth();
+  const monthLabel = calMonthCursor.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' });
+  const firstOfMonth = new Date(year, month, 1);
+  const startOffset = firstOfMonth.getDay(); // 0=Dom
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Total y P&L del mes visible
+  let monthTotal = 0, monthTrades = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (dailyPnL[dStr] !== undefined) { monthTotal += dailyPnL[dStr]; monthTrades += dailyCount[dStr]; }
+  }
+
+  // Construir celdas (incluye relleno antes/después para completar semanas)
+  const cells = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const dayLabels = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  function cellHTML(d) {
+    if (d === null) return `<div class="cal-cell empty"></div>`;
+    const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const pnl = dailyPnL[dStr];
+    const cnt = dailyCount[dStr] || 0;
+    let cls = 'cal-cell';
+    if (pnl !== undefined) cls += pnl > 0 ? ' win' : (pnl < 0 ? ' loss' : ' be');
+    return `<div class="${cls}" title="${dStr}" ${pnl !== undefined ? `onclick="showDayTrades('${dStr}')" style="cursor:pointer;"` : ''}>
+      <div class="cal-daynum">${d}</div>
+      ${pnl !== undefined ? `<div class="cal-pnl">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)}</div><div class="cal-count">${cnt} trade${cnt!==1?'s':''}</div>` : ''}
+    </div>`;
+  }
+
+  // Totales por semana (columna derecha)
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  function weekTotalHTML(week) {
+    let total = 0, count = 0;
+    week.forEach(d => {
+      if (d === null) return;
+      const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if (dailyPnL[dStr] !== undefined) { total += dailyPnL[dStr]; count += dailyCount[dStr]; }
+    });
+    if (count === 0) return `<div class="cal-week-total empty"></div>`;
+    return `<div class="cal-week-total ${total >= 0 ? 'win' : 'loss'}">
+      <div class="cal-week-label">Semana</div>
+      <div class="cal-week-pnl">${total >= 0 ? '+' : ''}$${total.toFixed(0)}</div>
+      <div class="cal-week-count">${count} trade${count!==1?'s':''}</div>
+    </div>`;
+  }
+
+  let html = `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+    <div class="panel-title" style="margin:0;border:none;padding:0;">🗓️ Calendario de Trading</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-sm" onclick="changeCalMonth(-1)">◀</button>
+      <div style="min-width:150px;text-align:center;text-transform:capitalize;font-weight:700;color:#E3A857;">${monthLabel}</div>
+      <button class="btn btn-sm" onclick="changeCalMonth(1)">▶</button>
+      <button class="btn btn-sm" onclick="goCalToday()">Hoy</button>
+      <span style="margin-left:10px;padding:6px 10px;border-radius:2px;border:1px solid #2A3140;background:#0B0E13;font-weight:700;" class="${monthTotal >= 0 ? 'pnl-pos' : 'pnl-neg'}">
+        ${monthTotal >= 0 ? '+' : ''}$${monthTotal.toFixed(2)} · ${monthTrades} trade${monthTrades!==1?'s':''}
+      </span>
+    </div>
+  </div>
+  <div class="cal-scroll">
+  <div class="cal-grid">
+    ${dayLabels.map(l => `<div class="cal-headcell">${l}</div>`).join('')}
+    <div class="cal-headcell week-col">Total</div>
+    ${weeks.map(week => week.map(d => cellHTML(d)).join('') + weekTotalHTML(week)).join('')}
+  </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:10px;font-size:9px;color:#8891A0;">
+    <span><span style="display:inline-block;width:10px;height:10px;background:rgba(111,162,135,.35);border:1px solid #6FA287;border-radius:2px;margin-right:4px;"></span>Día ganador</span>
+    <span><span style="display:inline-block;width:10px;height:10px;background:rgba(193,85,74,.35);border:1px solid #C1554A;border-radius:2px;margin-right:4px;"></span>Día perdedor</span>
+    <span><span style="display:inline-block;width:10px;height:10px;background:rgba(227,168,87,.25);border:1px solid #E3A857;border-radius:2px;margin-right:4px;"></span>Breakeven</span>
+  </div>
+  `;
+  return html;
+}
+
+function renderCalendarHeatmap(tradesToCalc) {
+  const dailyPnL = {};
+  tradesToCalc.forEach(t => {
+    dailyPnL[t.date] = (dailyPnL[t.date] || 0) + netProfit(t);
+  });
+
+  const days = Object.keys(dailyPnL);
+  if (days.length === 0) {
+    return `<div class="empty">Sin trades para mostrar el calendario</div>`;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDate = new Date(Math.min(...days.map(d => new Date(d + 'T00:00:00').getTime())));
+  const maxWeeksBack = 26; // ~6 meses de historial visible
+  let startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - maxWeeksBack * 7);
+  if (minDate > startDate) startDate = new Date(minDate);
+  startDate.setDate(startDate.getDate() - startDate.getDay()); // retroceder al domingo
+
+  const maxAbs = Math.max(1, ...days.map(d => Math.abs(dailyPnL[d])));
+
+  function colorFor(pnl) {
+    if (pnl === undefined) return '#141922'; // sin trades ese día
+    if (pnl === 0) return '#8891A0';
+    const intensity = Math.min(1, Math.abs(pnl) / maxAbs);
+    const alpha = (0.18 + intensity * 0.72).toFixed(2);
+    return pnl > 0 ? `rgba(111,162,135,${alpha})` : `rgba(193,85,74,${alpha})`;
+  }
+
+  const weeks = [];
+  let cursor = new Date(startDate);
+  while (cursor <= today) {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const dStr = cursor.toISOString().slice(0, 10);
+      week.push({ date: dStr, isFuture: cursor > today, pnl: dailyPnL[dStr] });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+
+  const monthLabels = [];
+  let lastMonth = null;
+  weeks.forEach((week, wi) => {
+    const firstDay = new Date(week[0].date + 'T00:00:00');
+    const mo = firstDay.getMonth();
+    if (mo !== lastMonth) {
+      monthLabels.push({ index: wi, label: firstDay.toLocaleDateString('es-CL', { month: 'short' }) });
+      lastMonth = mo;
+    }
+  });
+
+  const dayLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const cellSize = 11, gap = 3, colWidth = cellSize + gap;
+
+  let html = `<div style="overflow-x:auto;padding-bottom:4px;">`;
+  html += `<div style="position:relative;height:14px;margin-left:20px;margin-bottom:4px;font-size:9px;color:#8891A0;font-family:'IBM Plex Mono',monospace;">`;
+  monthLabels.forEach(ml => {
+    html += `<span style="position:absolute;left:${ml.index * colWidth}px;">${ml.label}</span>`;
+  });
+  html += `</div>`;
+  html += `<div style="display:flex;gap:${gap}px;">`;
+  html += `<div style="display:flex;flex-direction:column;gap:${gap}px;font-size:9px;color:#8891A0;font-family:'IBM Plex Mono',monospace;width:16px;">${dayLabels.map(d => `<div style="height:${cellSize}px;line-height:${cellSize}px;">${d}</div>`).join('')}</div>`;
+  weeks.forEach(week => {
+    html += `<div style="display:flex;flex-direction:column;gap:${gap}px;">`;
+    week.forEach(day => {
+      const bg = day.isFuture ? 'transparent' : colorFor(day.pnl);
+      const title = day.isFuture ? '' : (day.pnl !== undefined ? `${day.date}: $${day.pnl.toFixed(2)}` : `${day.date}: sin trades`);
+      html += `<div title="${title}" style="width:${cellSize}px;height:${cellSize}px;background:${bg};border-radius:2px;${day.isFuture ? '' : 'border:1px solid rgba(255,255,255,0.05);'}"></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:9px;color:#8891A0;font-family:'IBM Plex Mono',monospace;">
+    <span>Pérdida</span>
+    <div style="width:10px;height:10px;background:rgba(193,85,74,0.85);border-radius:2px;"></div>
+    <div style="width:10px;height:10px;background:rgba(193,85,74,0.35);border-radius:2px;"></div>
+    <div style="width:10px;height:10px;background:#8891A0;border-radius:2px;"></div>
+    <div style="width:10px;height:10px;background:rgba(111,162,135,0.35);border-radius:2px;"></div>
+    <div style="width:10px;height:10px;background:rgba(111,162,135,0.85);border-radius:2px;"></div>
+    <span>Ganancia</span>
+  </div>`;
+
+  return html;
+}
+
+function resultTag(t, verbose = false) {
+  const s = tradeSign(t);
+  if (s > 0) return `<span class="tag win">${verbose ? '✓ ' : ''}WIN</span>`;
+  if (s < 0) return `<span class="tag loss">${verbose ? '✗ ' : ''}LOSS</span>`;
+  return `<span class="tag be">${verbose ? '● ' : ''}BE</span>`;
+}
+
+function renderTradeCard(t) {
+  const hasR = (t.rMultiple !== null && t.rMultiple !== undefined && !isNaN(t.rMultiple));
+  const rTag = hasR
+    ? `<span class="tag ${t.rMultiple >= 1 ? 'win' : (t.rMultiple < 0 ? 'loss' : '')}">${t.rMultiple >= 0 ? '+' : ''}${t.rMultiple.toFixed(2)}R</span>`
+    : '';
+  const hasMaxR = (t.maxRMultiple !== null && t.maxRMultiple !== undefined && !isNaN(t.maxRMultiple) && t.maxRMultiple > 0);
+  const efficiencyTag = (hasR && hasMaxR)
+    ? `<span class="tag" title="Capturaste ${t.rMultiple.toFixed(1)}R de un máximo de ${t.maxRMultiple.toFixed(1)}R">📈 Llegó a ${t.maxRMultiple.toFixed(1)}R (capturaste ${Math.min(100, Math.max(0, t.rMultiple / t.maxRMultiple * 100)).toFixed(0)}%)</span>`
+    : (hasMaxR ? `<span class="tag">📈 Llegó a ${t.maxRMultiple.toFixed(1)}R</span>` : '');
+  const exitTypeMeta = {
+    tp: { label: '🎯 Take Profit', cls: 'win' },
+    be: { label: '⚖️ Breakeven', cls: 'be' },
+    trailing: { label: '📉 Trailing', cls: 'win' },
+    manual: { label: '✋ Manual', cls: '' },
+    sl: { label: '🛑 Stop Loss', cls: 'loss' },
+  };
+  const et = exitTypeMeta[t.exitType] || null;
+  const exitTypeTag = et ? `<span class="tag ${et.cls}">${et.label}</span>` : '';
+  const rrPlannedTag = (t.rrPlanned !== null && t.rrPlanned !== undefined && !isNaN(t.rrPlanned)) ? `<span class="tag">RR 1:${t.rrPlanned}</span>` : '';
+  const chartLink = t.chartUrl ? `<a href="${t.chartUrl}" target="_blank" rel="noopener" class="tag" style="text-decoration:none;">📊 Ver gráfico</a>` : '';
+  return `
+    <div class="trade-card ${tradeSign(t) < 0 ? 'loss' : (tradeSign(t) === 0 ? 'be' : '')}">
+      <div class="trade-pnl">${netProfit(t) >= 0 ? '+' : ''}$${netProfit(t).toFixed(2)}${t.cost ? `<div style="font-size:9px;color:#8891A0;font-weight:400;">(bruto $${(t.profit||0).toFixed(2)} - $${t.cost.toFixed(2)} costo)</div>` : ''}</div>
+      <div style="flex:1;">
+        <div class="trade-meta">
+          <span class="trade-pair">${t.pair}</span>
+          <span class="tag" style="margin:0;">${accounts.find(a => a.id == t.accountId)?.name || 'Sin asignar'}</span>
+          <span class="trade-info">${t.side} • ${t.date} • ${t.session}</span>
+        </div>
+        <div class="trade-info" style="margin-top:4px;">
+          Entrada: ${t.entryPrice} | Salida: ${t.exitPrice} | Qty: ${t.quantity}${t.riskAmount ? ` | Riesgo: $${t.riskAmount}` : ''}
+        </div>
+        <div class="trade-notes">${t.notes || 'Sin notas'}</div>
+        <div>
+          <span class="tag">${t.model || 'N/A'}</span>
+          <span class="tag">${t.timeframe || 'N/A'}</span>
+          ${exitTypeTag}
+          ${rrPlannedTag}
+          ${resultTag(t, true)}
+          ${rTag}
+          ${efficiencyTag}
+          ${chartLink}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <button class="btn btn-sm" onclick="editTrade('${t.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTrade('${t.id}')">Borrar</button>
+      </div>
+    </div>
+  `;
+}
+
+function updateJournalList() {
+  const tradesToShow = getJournalTrades();
+  const list = document.getElementById('journal-list');
+  const counter = document.getElementById('journal-count');
+  if (counter) counter.textContent = `Trades (${tradesToShow.length})`;
+  if (list) {
+    list.innerHTML = tradesToShow.length === 0
+      ? '<div class="empty">Sin trades para los filtros seleccionados</div>'
+      : tradesToShow.map(renderTradeCard).join('');
+  }
+}
+
+function renderJournal(m) {
+  const tradesToShow = getJournalTrades();
+  const hasFilters = selectedAccount || dateFrom || dateTo || journalSearch;
+  return `
+    <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select class="form-select" style="max-width:220px;" onchange="selectedAccount = this.value === 'ALL' ? null : this.value; render();">
+        <option value="ALL">📊 Todas las Cuentas</option>
+        ${accounts.map(a => `<option value="${a.id}" ${selectedAccount == a.id ? 'selected' : ''}>💰 ${a.name}</option>`).join('')}
+      </select>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label class="form-label" style="margin:0;">Desde</label>
+        <input type="date" class="form-input" style="width:auto;" value="${dateFrom || ''}" onchange="dateFrom = this.value || null; render();">
+        <label class="form-label" style="margin:0;">Hasta</label>
+        <input type="date" class="form-input" style="width:auto;" value="${dateTo || ''}" onchange="dateTo = this.value || null; render();">
+      </div>
+      ${hasFilters ? `<button class="btn btn-sm" onclick="clearJournalFilters()">✕ Limpiar filtros</button>` : ''}
+    </div>
+    ${selectedAccount ? `<div style="margin-bottom:10px;"><span style="padding:9px 10px;background:#0B0E13;border:1px solid #2A3140;border-radius:2px;color:#E3A857;">Filtrando: ${accounts.find(a => a.id == selectedAccount)?.name}</span></div>` : ''}
+    <div class="tab-bar">
+      <button class="tab-btn active" id="journal-count">Trades (${tradesToShow.length})</button>
+    </div>
+    <input type="text" class="form-input" id="search-trades" placeholder="Buscar par, notas, modelo..." style="margin-bottom:12px;" value="${journalSearch}" oninput="journalSearch = this.value; updateJournalList();">
+    <div id="journal-list">
+      ${tradesToShow.length === 0 ? '<div class="empty">Sin trades para los filtros seleccionados</div>' : tradesToShow.map(renderTradeCard).join('')}
+    </div>
+  `;
+}
+
+function renderAnalysis(m) {
+  const byModel = calculateByModel();
+  const byWeekday = calculateByWeekday();
+  const dailyData = {};
+  getFilteredTrades().forEach(t => {
+    if (!dailyData[t.date]) dailyData[t.date] = { count: 0, pnl: 0, wins: 0 };
+    dailyData[t.date].count++;
+    dailyData[t.date].pnl += netProfit(t);
+    if (tradeSign(t) > 0) dailyData[t.date].wins++;
+  });
+
+  return `
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">📊 Desempeño por Modelo</div>
+        <table class="rt-table">
+          <thead>
+            <tr><th>Modelo</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Confianza</th></tr>
+          </thead>
+          <tbody>
+            ${byModel.map(b => `<tr>
+              <td><b>${b.model}</b></td>
+              <td>${b.count}</td>
+              <td class="${b.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${b.pnl.toFixed(2)}</td>
+              <td>${b.wr}%</td>
+              <td>${confidenceBadge(b.confidence)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📅 Desempeño Diario (últimos 10)</div>
+        <table class="rt-table">
+          <thead>
+            <tr><th>Fecha</th><th>Trades</th><th>P&L</th><th>Win%</th></tr>
+          </thead>
+          <tbody>
+            ${Object.entries(dailyData).sort((a, b) => new Date(b[0]) - new Date(a[0])).slice(0, 10).map(([date, stats]) => `<tr>
+              <td>${date}</td>
+              <td>${stats.count}</td>
+              <td class="${stats.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${stats.pnl.toFixed(2)}</td>
+              <td>${(stats.wins / stats.count * 100).toFixed(1)}%</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="grid-full">
+      <div class="panel">
+        <div class="panel-title">📆 Desempeño por Día de la Semana</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;">
+          ${byWeekday.map(w => {
+            const color = w.pnl > 0 ? '#6FA287' : w.pnl < 0 ? '#C1554A' : '#8891A0';
+            return `<div style="border:1px solid #2A3140;border-left:3px solid ${color};padding:10px;background:#0B0E13;">
+              <div style="font-size:10px;color:#8891A0;text-transform:uppercase;letter-spacing:.5px;">${w.weekday}</div>
+              <div style="font-size:16px;font-weight:800;color:${color};">$${w.pnl.toFixed(2)}</div>
+              <div style="font-size:10px;color:#8891A0;">${w.count} trades · ${w.wr}% WR</div>
+            </div>`;
+          }).join('')}
+        </div>
+        ${byWeekday.length === 0 ? '<div class="empty">Sin trades aún</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderStats(m) {
+  const tradesToCalc = getFilteredTrades();
+  const streakLabel = m.streakType === 'WIN' ? `🔥 ${m.streakCount} WIN` :
+                       m.streakType === 'LOSS' ? `❄️ ${m.streakCount} LOSS` :
+                       m.streakType === 'BE' ? 'Breakeven' : 'N/A';
+  const filterLabel = selectedAccount ? (accounts.find(a => a.id == selectedAccount)?.name || 'Cuenta') : 'Todas las Cuentas';
+  return `
+    <div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select class="form-select" style="max-width:220px;" onchange="selectedAccount = this.value === 'ALL' ? null : this.value; render();">
+        <option value="ALL">📊 Todas las Cuentas</option>
+        ${accounts.map(a => `<option value="${a.id}" ${selectedAccount == a.id ? 'selected' : ''}>💰 ${a.name}</option>`).join('')}
+      </select>
+      <span style="padding:9px 10px;background:#0B0E13;border:1px solid #2A3140;border-radius:2px;color:#E3A857;">Mostrando: ${filterLabel}</span>
+    </div>
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-title">📈 Estadísticas Generales — ${filterLabel}</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-value">${m.total}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Ganancias</div>
+            <div class="stat-value green">${m.wins}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Pérdidas</div>
+            <div class="stat-value red">${m.losses}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Breakeven</div>
+            <div class="stat-value neutral">${m.breakeven}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value neutral">${m.winRate}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Profit Factor</div>
+            <div class="stat-value ${m.profitFactor >= 1.5 ? 'green' : 'neutral'}">${m.profitFactor}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Racha Actual</div>
+            <div class="stat-value ${m.streakType === 'WIN' ? 'green' : m.streakType === 'LOSS' ? 'red' : 'neutral'}">${streakLabel}</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">💰 Análisis de Ganancias</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Ganancia Promedio</div>
+            <div class="stat-value green">$${m.avgWin}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Pérdida Promedio</div>
+            <div class="stat-value red">$${m.avgLoss}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Risk/Reward</div>
+            <div class="stat-value neutral">${m.rrRatio}x</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Total P&L</div>
+            <div class="stat-value ${m.pnl >= 0 ? 'green' : 'red'}">$${m.pnl}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Max Drawdown</div>
+            <div class="stat-value red">${m.maxDD}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sharpe Ratio</div>
+            <div class="stat-value neutral">${m.sharpe}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sortino Ratio</div>
+            <div class="stat-value neutral">${m.sortino}</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🎯 Resumen Rápido</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Expectancy ($/trade)</div>
+            <div class="stat-value ${m.expectancy >= 0 ? 'green' : 'red'}">$${m.expectancy}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">R Promedio</div>
+            <div class="stat-value ${m.rAvg >= 0 ? 'green' : 'red'}">${m.rCount > 0 ? m.rAvg + 'R' : 'N/A'}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">% Trades con R≥1</div>
+            <div class="stat-value neutral">${m.rCount > 0 ? m.pctR1 + '%' : 'N/A'} <span style="color:#8891A0;font-size:9px;">(${m.rCount} c/R)</span></div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Mejor Trade</div>
+            <div class="stat-value green">$${(tradesToCalc.length ? Math.max(...tradesToCalc.map(t => netProfit(t))) : 0).toFixed(2)}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Peor Trade</div>
+            <div class="stat-value red">$${(tradesToCalc.length ? Math.min(...tradesToCalc.map(t => netProfit(t))) : 0).toFixed(2)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${renderExitStrategyPanels()}
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">📊 Distribución de R-Multiple</div>
+        <div class="chart-container">
+          <canvas id="rmult-chart"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🗓️ Reporte Semanal / Mensual</div>
+        ${renderPeriodReport()}
+      </div>
+    </div>
+  `;
+}
+
+// Resume el desempeño de los últimos 7 y 30 días en texto plano, comparando contra el resto del historial.
+function renderPeriodReport() {
+  const all = getFilteredTrades();
+  if (all.length === 0) return '<div class="empty">Sin trades aún.</div>';
+  const now = new Date();
+  const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() - 7);
+  const cutoff30 = new Date(now); cutoff30.setDate(cutoff30.getDate() - 30);
+
+  function summarize(list) {
+    if (list.length === 0) return null;
+    const pnl = list.reduce((s, t) => s + netProfit(t), 0);
+    const wins = list.filter(t => tradeSign(t) > 0).length;
+    const wr = (wins / list.length * 100).toFixed(1);
+    const byModelCount = {};
+    list.forEach(t => { const mo = t.model || 'Sin asignar'; byModelCount[mo] = (byModelCount[mo] || 0) + netProfit(t); });
+    const bestModel = Object.entries(byModelCount).sort((a, b) => b[1] - a[1])[0];
+    const worstModel = Object.entries(byModelCount).sort((a, b) => a[1] - b[1])[0];
+    return { count: list.length, pnl, wr, bestModel, worstModel };
+  }
+
+  const w7 = summarize(all.filter(t => new Date(t.date) >= cutoff7));
+  const w30 = summarize(all.filter(t => new Date(t.date) >= cutoff30));
+
+  function block(title, s) {
+    if (!s) return `<div style="margin-bottom:14px;"><div class="panel-title" style="font-size:11px;">${title}</div><div class="empty" style="padding:8px 0;">Sin trades en este período</div></div>`;
+    return `<div style="margin-bottom:14px;">
+      <div class="panel-title" style="font-size:11px;">${title}</div>
+      <div style="font-size:12px;line-height:1.7;">
+        ${s.count} trades · P&L <span class="${s.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${s.pnl.toFixed(2)}</span> · Win ${s.wr}%<br>
+        ${s.bestModel ? `Mejor setup: <b>${s.bestModel[0]}</b> ($${s.bestModel[1].toFixed(2)})` : ''}
+        ${s.worstModel && s.worstModel[0] !== s.bestModel[0] ? `<br>Peor setup: <b>${s.worstModel[0]}</b> ($${s.worstModel[1].toFixed(2)})` : ''}
+      </div>
+    </div>`;
+  }
+
+  return block('Últimos 7 días', w7) + block('Últimos 30 días', w30);
+}
+
+function renderExitStrategyPanels() {
+  const byExit = calculateByExitType();
+  const byRR = calculateByRRPlanned();
+  const insights = generateInsights();
+
+  const exitRows = byExit.length === 0
+    ? `<div class="empty" style="padding:12px;">Registra el campo "Cómo cerraste" en tus trades para ver esta tabla.</div>`
+    : `<table class="rt-table"><thead><tr><th>Tipo de Salida</th><th>Trades</th><th>Win Rate</th><th>Expectancy</th><th>R Promedio</th><th>Confianza</th></tr></thead><tbody>
+        ${byExit.map(e => `<tr>
+          <td>${e.label}</td>
+          <td>${e.count}</td>
+          <td>${e.wr}%</td>
+          <td class="${e.expectancy >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${e.expectancy}</td>
+          <td>${e.rAvg !== null ? e.rAvg + 'R' : 'N/A'}</td>
+          <td>${confidenceBadge(e.confidence)}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+
+  const rrRows = byRR.length === 0
+    ? `<div class="empty" style="padding:12px;">Registra el campo "RR Planeado" en tus trades para ver esta tabla.</div>`
+    : `<table class="rt-table"><thead><tr><th>RR Planeado</th><th>Trades</th><th>Win Rate</th><th>Expectancy</th><th>Confianza</th></tr></thead><tbody>
+        ${byRR.map(r => `<tr>
+          <td>1:${r.rr}</td>
+          <td>${r.count}</td>
+          <td>${r.wr}%</td>
+          <td class="${r.expectancy >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${r.expectancy}</td>
+          <td>${confidenceBadge(r.confidence)}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+
+  const insightIcon = { good: '✅', bad: '⚠️', info: 'ℹ️' };
+  const insightColor = { good: '#6FA287', bad: '#C1554A', info: '#E3A857' };
+  const insightsHtml = insights.map(i => `
+    <div style="padding:10px 12px;margin-bottom:8px;background:#1B212C;border-left:2px solid ${insightColor[i.type]};font-size:12px;line-height:1.5;color:#EDE8DD;">
+      ${insightIcon[i.type]} ${i.text}
+    </div>
+  `).join('');
+
+  return `
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">🎯 Rendimiento por Tipo de Salida</div>
+        <div class="table-wrap">${exitRows}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">📐 Rendimiento por RR Planeado</div>
+        <div class="table-wrap">${rrRows}</div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-title">🧠 Recomendaciones <span style="color:#8891A0;font-weight:400;text-transform:none;letter-spacing:0;">— RR + tipo de salida, cruzado con eficiencia de captura y arrastre de costos. Confianza según muestra: 10-29 bajo · 30-49 medio · 50+ alto. Neto de comisión+swap exacto en Live/Fondeada.</span></div>
+      ${insightsHtml}
+    </div>
+  `;
+}
+
+function renderRisk(m) {
+  const monthlyGoal = settings.monthlyGoal || 1000;
+  const maxDrawdown = settings.maxDrawdownPct || 5;
+  const maxRisk = settings.maxRiskPerTrade || 2;
+  const acc = accounts.find(a => a.id == selectedAccount);
+  const currentBalance = acc ? parseFloat(acc.currentBalance || acc.startBalance) : accounts.reduce((s, a) => s + parseFloat(a.currentBalance || a.startBalance || 0), 0) || 10000;
+  const dailyLimit = currentBalance * maxRisk / 100;
+
+  return `
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">⚠️ Límites de Riesgo</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Balance Actual ${selectedAccount ? '(cuenta filtrada)' : '(todas las cuentas)'}</div>
+            <div class="stat-value neutral">$${currentBalance}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Max Drawdown %</div>
+            <div class="stat-value neutral">${maxDrawdown}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Risk per Trade %</div>
+            <div class="stat-value neutral">${maxRisk}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Max Risk por Trade</div>
+            <div class="stat-value neutral">$${dailyLimit.toFixed(2)}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Actual Drawdown</div>
+            <div class="stat-value ${Math.abs(parseFloat(m.maxDD)) > maxDrawdown ? 'red' : 'neutral'}">${m.maxDD}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Estado</div>
+            <div class="stat-value ${Math.abs(parseFloat(m.maxDD)) > maxDrawdown ? 'red' : 'green'}">${Math.abs(parseFloat(m.maxDD)) > maxDrawdown ? '⚠️ ALERTA' : '✓ OK'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🎯 Objetivo Mensual</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Meta Mensual</div>
+            <div class="stat-value neutral">$${monthlyGoal}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">P&L Actual</div>
+            <div class="stat-value ${m.pnl >= monthlyGoal ? 'green' : 'neutral'}">${m.pnl >= monthlyGoal ? '✓' : ''} $${m.pnl}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Progreso</div>
+            <div class="stat-value neutral">${(m.pnl / monthlyGoal * 100).toFixed(0)}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Faltante</div>
+            <div class="stat-value">${monthlyGoal - m.pnl > 0 ? '$' + (monthlyGoal - m.pnl).toFixed(2) : '✓ Alcanzado'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAccounts(m) {
+  const accountsStats = accounts.map(acc => {
+    const accTrades = trades.filter(t => t.accountId == acc.id);
+    const accPnL = accTrades.reduce((sum, t) => sum + netProfit(t), 0);
+    const accWins = accTrades.filter(t => tradeSign(t) > 0).length;
+    const accLosses = accTrades.filter(t => tradeSign(t) < 0).length;
+    const currentBalance = parseFloat(acc.currentBalance || acc.startBalance);
+    const returnPct = ((currentBalance - parseFloat(acc.startBalance)) / parseFloat(acc.startBalance) * 100).toFixed(2);
+    return { ...acc, accPnL, accWins, accLosses, currentBalance, returnPct, tradeCount: accTrades.length };
+  });
+
+  return `
+    <div class="grid-full">
+      <div class="panel">
+        <div class="panel-title">📊 Resumen de Cuentas</div>
+        <div class="table-wrap">
+          <table class="rt-table">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Broker</th>
+                <th>Inicial</th>
+                <th>Actual</th>
+                <th>P&L</th>
+                <th>Return %</th>
+                <th>Trades</th>
+                <th>W/L</th>
+                <th>Comisión Prom. Real</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${accountsStats.map(a => {
+                const realCost = getRealAvgCommission(a.id);
+                const costCell = realCost
+                  ? `$${realCost.avg.toFixed(2)} <span style="color:#8891A0;font-size:11px;">(${realCost.count} trades)</span>`
+                  : `<span style="color:#8891A0;">— sin datos</span>`;
+                return `
+                <tr onclick="selectedAccount = '${a.id}'; setTab('journal');" style="cursor:pointer;">
+                  <td><b>${a.name}</b></td>
+                  <td>${a.broker}</td>
+                  <td>$${parseFloat(a.startBalance).toFixed(2)}</td>
+                  <td style="font-weight:700;color:#6FA287;">$${a.currentBalance.toFixed(2)}</td>
+                  <td class="${a.accPnL >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${a.accPnL.toFixed(2)}</td>
+                  <td class="${a.returnPct >= 0 ? 'pnl-pos' : 'pnl-neg'}">${a.returnPct}%</td>
+                  <td>${a.tradeCount}</td>
+                  <td>${a.accWins}W/${a.accLosses}L</td>
+                  <td>${costCell}</td>
+                  <td onclick="event.stopPropagation();">
+                    <button class="btn btn-sm" onclick="event.stopPropagation(); editAccount('${a.id}')">✏️ Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removeAccount('${a.id}')">🗑️ Del</button>
+                  </td>
+                </tr>
+              `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">💼 Estadísticas Totales (Suma de Todas las Cuentas)</div>
+        <div class="panel-subtitle" style="margin-bottom:10px;">Este panel SUMA todas tus cuentas/estrategias en un solo total — es un gran total, no reemplaza el detalle por cuenta de la tabla de arriba. Cada cuenta se sigue midiendo por separado ahí.</div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <div class="stat-label">Cuentas Activas</div>
+            <div class="stat-value">${accounts.length}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Balance Total</div>
+            <div class="stat-value green">$${accountsStats.reduce((s, a) => s + a.currentBalance, 0).toFixed(2)}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">P&L Total</div>
+            <div class="stat-value ${accountsStats.reduce((s, a) => s + a.accPnL, 0) >= 0 ? 'green' : 'red'}">$${accountsStats.reduce((s, a) => s + a.accPnL, 0).toFixed(2)}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Return Promedio</div>
+            <div class="stat-value">${accounts.length > 0 ? (accountsStats.reduce((s, a) => s + parseFloat(a.returnPct), 0) / accounts.length).toFixed(2) : '0.00'}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Trades Totales</div>
+            <div class="stat-value">${accountsStats.reduce((s, a) => s + a.tradeCount, 0)}</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Win Rate (Suma Todas las Cuentas)</div>
+            <div class="stat-value">${trades.length > 0 ? ((trades.filter(t => tradeSign(t) > 0).length / trades.length) * 100).toFixed(1) : 0}%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">➕ Agregar Nueva Cuenta</div>
+        <div class="form-group">
+          <label class="form-label">Nombre de la Cuenta</label>
+          <input type="text" class="form-input" id="acc_name" placeholder="Ej: Principal Binance">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Broker</label>
+          <select class="form-select" id="acc_broker">
+            <option>Binance</option>
+            <option>Oanda</option>
+            <option>IC Markets</option>
+            <option>IG</option>
+            <option>Saxo Bank</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Balance Inicial ($)</label>
+            <input type="number" class="form-input" id="acc_balance" placeholder="10000" step="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="acc_type" onchange="toggleAccCostField('acc_type','acc_cost_group')">
+              <option>Live</option>
+              <option>Demo</option>
+              <option>Fondeada</option>
+              <option>Paper</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="acc_cost_group">
+          <label class="form-label">Costo promedio por trade ($) — comisión + swap/spread</label>
+          <input type="number" class="form-input" id="acc_cost" placeholder="Ej: 1.50" step="0.01">
+        </div>
+        <button class="btn btn-primary" onclick="addAccount()" style="width:100%;">✅ Crear Cuenta</button>
+      </div>
+    </div>
+
+    <div class="grid-full">
+      <div class="panel">
+        <div class="panel-title">📈 Comparar Cuentas (P&L acumulado)</div>
+        <div class="panel-subtitle" style="margin-bottom:10px;">Evolución de cada cuenta en el mismo gráfico, en orden cronológico de sus propios trades (eje X = trade #1, #2, #3... de cada cuenta).</div>
+        <div style="height:280px;">
+          <canvas id="compare-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGallery(m) {
+  const tradesWithChart = getFilteredTrades().filter(t => t.chartUrl);
+
+  return `
+    <div class="grid-full">
+      <div class="panel">
+        <div class="panel-title">🖼️ Galería de Screenshots (${tradesWithChart.length})</div>
+        <div class="panel-subtitle" style="margin-bottom:12px;">Capturas de TradingView vinculadas a tus trades. Click en una miniatura para abrirla en tamaño completo.</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <select class="form-select" style="width:auto;min-width:180px;" onchange="selectedAccount=this.value||null; render();">
+            <option value="">Todas las cuentas</option>
+            ${accounts.map(a => `<option value="${a.id}" ${selectedAccount == a.id ? 'selected' : ''}>💰 ${a.name}</option>`).join('')}
+          </select>
+          ${selectedAccount ? `<span style="padding:9px 10px;background:#0B0E13;border:1px solid #2A3140;border-radius:2px;color:#E3A857;">Filtrando: ${accounts.find(a => a.id == selectedAccount)?.name}</span>` : ''}
+        </div>
+        ${tradesWithChart.length === 0 ? `
+          <div class="empty">Sin screenshots todavía. Agrega un link de TradingView en el campo "Chart URL" al registrar o editar un trade.</div>
+        ` : `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+            ${tradesWithChart.map(t => `
+              <a href="${t.chartUrl}" target="_blank" rel="noopener" style="display:block;text-decoration:none;border:1px solid #2A3140;background:#0B0E13;overflow:hidden;">
+                <div style="position:relative;width:100%;aspect-ratio:16/10;background:#1B212C;">
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#8891A0;">🖼️</div>
+                  <img src="${t.chartUrl}" loading="lazy" style="position:relative;width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                </div>
+                <div style="padding:8px;">
+                  <div style="font-size:11px;font-weight:700;color:#EDE8DD;">${t.pair} <span style="color:#8891A0;font-weight:400;">${t.side || ''}</span></div>
+                  <div style="font-size:9px;color:#8891A0;margin-top:2px;">${t.date} · ${accounts.find(a => a.id == t.accountId)?.name || 'Sin cuenta'}</div>
+                  <div style="font-size:11px;font-weight:700;margin-top:3px;" class="${netProfit(t) >= 0 ? 'pnl-pos' : 'pnl-neg'}">$${netProfit(t).toFixed(2)}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderCombinations(m){const t=calculateCombinations();const byModel=calculateByModel();return`<div class="grid-full"><div class="panel"><div class="panel-title">📊 Comparador de Estrategias (P&L por Modelo)</div><div class="chart-container" style="height:240px;"><canvas id="model-compare-chart"></canvas></div></div></div><div class="grid-full"><div class="panel"><div class="panel-title">🔗 Combinaciones (Par+Sesión+Modelo)</div><div style="margin-bottom:12px;display:flex;gap:8px;"><div><label class="form-label">Desde</label><input type="date" class="form-input" value="${dateFrom||''}" onchange="dateFrom=this.value||null;render();"></div><div><label class="form-label">Hasta</label><input type="date" class="form-input" value="${dateTo||''}" onchange="dateTo=this.value||null;render();"></div></div><div class="table-wrap"><table class="rt-table" style="font-size:10px;"><thead><tr><th>Par</th><th>Sesión</th><th>Modelo</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Max DD</th><th>Max Win</th></tr></thead><tbody>${t.map(t=>`<tr><td><b>${t.pair}</b></td><td>${t.session}</td><td>${t.model}</td><td>${t.count}</td><td class="${t.pnl>=0?"pnl-pos":"pnl-neg"}">$${t.pnl.toFixed(2)}</td><td>${t.wr}%</td><td style="color:#C1554A;">${t.maxDD}%</td><td style="color:#6FA287;">${t.maxWinStreak}</td></tr>`).join('')}</tbody></table></div></div><div class="panel"><div class="panel-title">🎲 Kelly Criterion por Modelo</div><div style="font-size:11px;color:#8891A0;margin-bottom:10px;">% óptimo de capital a arriesgar según el winrate y RR real de cada estrategia. Confiable solo con 30+ trades — con menos, tómalo como orientativo.</div><div class="table-wrap"><table class="rt-table" style="font-size:10px;"><thead><tr><th>Modelo</th><th>Trades</th><th>Win%</th><th>Kelly</th><th>¼ Kelly (uso práctico)</th><th>Confianza</th></tr></thead><tbody>${byModel.map(b=>`<tr><td><b>${b.model}</b></td><td>${b.count}</td><td>${b.wr}%</td><td class="${b.kelly>0?'pnl-pos':''}">${b.kelly}%</td><td>${(b.kelly/4).toFixed(1)}%</td><td>${b.confidenceLabel}</td></tr>`).join('')}</tbody></table></div></div></div>`}
+
+function renderGoals(m){const t=calculateMonthlyGoalByAccount(),a=new Date().toISOString().slice(0,7);return`<div class="grid-full"><div class="panel"><div class="panel-title">🎯 Meta Mensual por Cuenta (${a})</div><div class="table-wrap"><table class="rt-table"><thead><tr><th>Cuenta</th><th>Trades</th><th>P&L</th><th>Meta</th><th>Status</th><th>Progreso</th></tr></thead><tbody>${Object.entries(t).map(([t,e])=>{const n=parseFloat(e.pnl)>=e.goal?"✓ Logrado":parseFloat(e.pnl)>=0.5*e.goal?"⏳ Progreso":"⚠️ Atrasado",c=parseFloat(e.pnl)>=e.goal?"#6FA287":parseFloat(e.pnl)>=0.5*e.goal?"#E3A857":"#C1554A";return`<tr><td><b>${e.account}</b></td><td>${e.count||0}</td><td class="${parseFloat(e.pnl)>=0?"pnl-pos":"pnl-neg"}">$${e.pnl}</td><td>$${e.goal}</td><td style="color:${c};font-weight:600;">${n}</td><td><div style="height:6px;background:#1A1E2A;width:100px;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(e.pct,100)}%;background:${c};"></div></div></td></tr>`}).join('')}</tbody></table></div></div></div>`}
+
+function renderSettings(m) {
+  return `
+    <div class="panel" style="max-width:500px;">
+      <div class="panel-title">⚙️ Configuración</div>
+      
+      <div class="form-group">
+        <label class="form-label">Meta de Ganancia Mensual ($)</label>
+        <input type="number" class="form-input" id="set_goal" value="${settings.monthlyGoal}" placeholder="1000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max Drawdown (%)</label>
+        <input type="number" class="form-input" id="set_dd" value="${settings.maxDrawdownPct}" placeholder="5" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max Risk por Trade (%)</label>
+        <input type="number" class="form-input" id="set_risk" value="${settings.maxRiskPerTrade}" placeholder="2" step="0.1">
+      </div>
+      
+      <button class="btn btn-primary" onclick="updateSettings()">Guardar Configuración</button>
+      
+      <div style="margin-top:20px;border-top:1px solid #2A3140;padding-top:12px;">
+        <div class="panel-title">📦 Datos</div>
+        <button class="btn" onclick="exportData('json')" style="width:100%;margin-bottom:6px;">Descargar Backup (JSON)</button>
+        <button class="btn" onclick="exportData('csv')" style="width:100%;margin-bottom:6px;">Descargar Trades (CSV)</button>
+        <label class="btn" style="width:100%;text-align:center;cursor:pointer;">
+          Restaurar Backup
+          <input type="file" id="restore_file" accept=".json" style="display:none;" onchange="importData(event)">
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+// ========== HANDLERS ==========
+function saveTrade() {
+  const accountId = document.getElementById('trade_account').value;
+  const acc0 = accounts.find(a => a.id == accountId);
+  
+  const trade = {
+    id: Date.now(),
+    accountId: accountId,
+    date: document.getElementById('trade_date').value,
+    pair: document.getElementById('trade_pair').value.toUpperCase(),
+    side: document.getElementById('trade_side').value,
+    entryPrice: parseFloat(document.getElementById('trade_entry').value),
+    exitPrice: parseFloat(document.getElementById('trade_exit').value),
+    quantity: parseFloat(document.getElementById('trade_qty').value),
+    session: document.getElementById('trade_session').value,
+    riskAmount: parseFloat(document.getElementById('trade_risk').value) || 0,
+    maxRMultiple: parseFloat(document.getElementById('trade_max_r').value) || null,
+    model: document.getElementById('trade_model').value,
+    exitType: document.getElementById('trade_exit_type').value,
+    rrPlanned: parseFloat(document.getElementById('trade_rr_planned').value) || null,
+    timeframe: document.getElementById('trade_tf').value,
+    notes: document.getElementById('trade_notes').value,
+    chartUrl: document.getElementById('trade_chart_url').value.trim(),
+    // Costo real (comisión+swap) de ESTE trade. Solo aplica en cuentas Live/Fondeada.
+    cost: (acc0 && COST_APPLICABLE_TYPES.includes(acc0.type)) ? (parseFloat(document.getElementById('trade_cost').value) || 0) : 0,
+  };
+
+  // Calculate profit (bruto): si el usuario escribió la ganancia en $ manualmente, esa manda.
+  // Si no, se calcula automático con Entrada/Salida/Cantidad (asume que el precio ya está en $/unidad).
+  const manualProfit = document.getElementById('trade_profit_usd').value;
+  if (manualProfit !== '' && !isNaN(parseFloat(manualProfit))) {
+    trade.profit = parseFloat(manualProfit);
+  } else {
+    const priceDiff = trade.exitPrice - trade.entryPrice;
+    const multiplier = trade.side === 'SHORT' ? -1 : 1;
+    trade.profit = priceDiff * multiplier * trade.quantity;
+  }
+
+  // Calculate R Multiple realizado (si se definió riesgo) - sobre el profit bruto, como venía
+  trade.rMultiple = trade.riskAmount > 0 ? trade.profit / trade.riskAmount : null;
+
+  if (!accountId || !trade.pair || !trade.date || isNaN(trade.entryPrice) || isNaN(trade.exitPrice) || isNaN(trade.quantity)) {
+    showToast('Completa todos los campos incluida la cuenta', 'error');
+    return;
+  }
+
+  // ALERTA DE RIESGO PRE-SAVE
+  const risks = checkRiskAlert(trade);
+  if (risks.length > 0) {
+    const riskMsg = risks.map(r => r.msg).join('\n\n');
+    if (!confirm(`Alertas de riesgo:\n\n${riskMsg}\n\n¿Guardar de todas formas?`)) return;
+  }
+
+  trades.unshift(trade);
+  
+  // Actualizar balance de la cuenta con el P&L neto (profit - costo real)
+  const acc = accounts.find(a => a.id == accountId);
+  if (acc) {
+    acc.currentBalance = (parseFloat(acc.currentBalance || acc.startBalance) + netProfit(trade)).toFixed(2);
+  }
+  
+  saveTrades();
+  saveAccounts();
+  toggleFormModal();
+  showToast('Trade agregado correctamente', 'success');
+  render();
+}
+
+function editTrade(id) {
+  const trade = trades.find(t => t.id == id);
+  if (!trade) return;
+  
+  toggleFormModal(true);
+  
+  // Esperar a que el modal se renderice
+  setTimeout(() => {
+    document.getElementById('trade_account').value = trade.accountId;
+    document.getElementById('trade_date').value = trade.date;
+    document.getElementById('trade_pair').value = trade.pair;
+    document.getElementById('trade_side').value = trade.side;
+    document.getElementById('trade_entry').value = trade.entryPrice;
+    document.getElementById('trade_exit').value = trade.exitPrice;
+    document.getElementById('trade_qty').value = trade.quantity;
+    document.getElementById('trade_session').value = trade.session;
+    document.getElementById('trade_risk').value = trade.riskAmount || '';
+    document.getElementById('trade_max_r').value = trade.maxRMultiple || '';
+    document.getElementById('trade_model').value = trade.model;
+    document.getElementById('trade_exit_type').value = trade.exitType || 'manual';
+    document.getElementById('trade_rr_planned').value = trade.rrPlanned || '';
+    document.getElementById('trade_tf').value = trade.timeframe;
+    document.getElementById('trade_notes').value = trade.notes;
+    document.getElementById('trade_chart_url').value = trade.chartUrl || '';
+    document.getElementById('trade_profit_usd').value = (trade.profit !== undefined && trade.profit !== null) ? trade.profit : '';
+    onTradeAccountChange();
+    const costInput = document.getElementById('trade_cost');
+    if (costInput && trade.cost !== undefined && trade.cost !== null) {
+      costInput.value = trade.cost;
+      costInput.dataset.userEdited = '1'; // no pisar con el promedio de la cuenta
+    }
+    
+    // Actualizar button
+    const title = document.querySelector('.modal-box .modal-title');
+    title.textContent = `Editar Trade - ${trade.pair} ${trade.date}`;
+    
+    const saveBtn = document.querySelector('.modal-box .btn-primary');
+    const newSave = saveBtn.cloneNode(true);
+    newSave.textContent = 'Actualizar Trade';
+    newSave.onclick = () => {
+      const oldNet = netProfit(trade);
+      trades = trades.filter(t => t.id != id);
+      saveTrade();
+      
+      // Revertir cambio en balance de la cuenta antigua (con el P&L neto anterior)
+      const oldAcc = accounts.find(a => a.id == trade.accountId);
+      if (oldAcc) {
+        oldAcc.currentBalance = (parseFloat(oldAcc.currentBalance) - oldNet).toFixed(2);
+      }
+    };
+    saveBtn.parentElement.replaceChild(newSave, saveBtn);
+  }, 50);
+}
+
+function deleteTrade(id) {
+  if (confirm('¿Borrar este trade? Se revertirá el balance de la cuenta.')) {
+    const trade = trades.find(t => t.id == id);
+    if (trade) {
+      const acc = accounts.find(a => a.id == trade.accountId);
+      if (acc) {
+        acc.currentBalance = (parseFloat(acc.currentBalance || acc.startBalance) - netProfit(trade)).toFixed(2);
+      }
+    }
+    trades = trades.filter(t => t.id != id);
+    saveTrades();
+    saveAccounts();
+    showToast('Trade eliminado y balance revertido', 'error');
+    render();
+  }
+}
+
+function toggleAccCostField(typeSelectId, groupId) {
+  const type = document.getElementById(typeSelectId)?.value;
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.style.display = COST_APPLICABLE_TYPES.includes(type) ? '' : 'none';
+}
+
+// Muestra/oculta el campo de costo por trade según el tipo de la cuenta seleccionada,
+// y sugiere como valor inicial el promedio de la cuenta (editable para dejar el valor exacto).
+function onTradeAccountChange() {
+  const accId = document.getElementById('trade_account')?.value;
+  const acc = accounts.find(a => a.id == accId);
+  const group = document.getElementById('trade_cost_group');
+  const costInput = document.getElementById('trade_cost');
+  if (!group || !costInput) return;
+  if (acc && COST_APPLICABLE_TYPES.includes(acc.type)) {
+    group.style.display = '';
+    if (!costInput.dataset.userEdited) {
+      // Con 5+ trades reales cargados, el promedio real manda sobre el número fijo declarado en la cuenta.
+      const real = getRealAvgCommission(accId);
+      costInput.value = (real && real.count >= 5) ? real.avg.toFixed(2) : (acc.avgCost || '');
+    }
+  } else {
+    group.style.display = 'none';
+    costInput.value = '';
+  }
+}
+
+function addAccount() {
+  const name = document.getElementById('acc_name')?.value;
+  const broker = document.getElementById('acc_broker')?.value;
+  const balance = document.getElementById('acc_balance')?.value;
+  const type = document.getElementById('acc_type')?.value || 'Live';
+  const avgCost = COST_APPLICABLE_TYPES.includes(type) ? (parseFloat(document.getElementById('acc_cost')?.value) || 0) : 0;
+  
+  if (!name || !balance) {
+    showToast('Completa los campos', 'error');
+    return;
+  }
+  
+  accounts.unshift({
+    id: Date.now(),
+    name, broker, startBalance: balance, currentBalance: balance, type: type, avgCost: avgCost
+  });
+  
+  // Limpiar formulario
+  document.getElementById('acc_name').value = '';
+  document.getElementById('acc_balance').value = '';
+  if (document.getElementById('acc_cost')) document.getElementById('acc_cost').value = '';
+  
+  saveAccounts();
+  showToast(`Cuenta "${name}" creada con $${balance}`, 'success');
+  render();
+}
+
+function editAccount(id) {
+  const acc = accounts.find(a => a.id == id);
+  if (!acc) return;
+  document.getElementById('acc_edit_name').value = acc.name;
+  document.getElementById('acc_edit_broker').value = acc.broker;
+  document.getElementById('acc_edit_balance').value = acc.currentBalance || acc.startBalance;
+  document.getElementById('acc_edit_type').value = acc.type || 'Live';
+  document.getElementById('acc_edit_cost').value = acc.avgCost || '';
+  toggleAccCostField('acc_edit_type', 'acc_edit_cost_group');
+  document.getElementById('account-modal').dataset.editingId = id;
+  document.getElementById('account-modal').classList.remove('hidden');
+}
+
+function closeAccountModal() {
+  document.getElementById('account-modal').classList.add('hidden');
+}
+
+function saveAccountEdit() {
+  const id = document.getElementById('account-modal').dataset.editingId;
+  const acc = accounts.find(a => a.id == id);
+  if (!acc) return;
+  const name = document.getElementById('acc_edit_name').value.trim();
+  const balance = parseFloat(document.getElementById('acc_edit_balance').value);
+  if (!name || isNaN(balance)) {
+    showToast('Completa nombre y balance válidos', 'error');
+    return;
+  }
+  acc.name = name;
+  acc.broker = document.getElementById('acc_edit_broker').value;
+  acc.currentBalance = balance;
+  acc.type = document.getElementById('acc_edit_type').value;
+  acc.avgCost = COST_APPLICABLE_TYPES.includes(acc.type) ? (parseFloat(document.getElementById('acc_edit_cost').value) || 0) : 0;
+  saveAccounts();
+  closeAccountModal();
+  showToast('Cuenta actualizada', 'success');
+  render();
+}
+
+function removeAccount(id) {
+  const acc = accounts.find(a => a.id == id);
+  if (!acc) return;
+  const orphanCount = trades.filter(t => t.accountId == id).length;
+  const warning = orphanCount > 0
+    ? `¿Borrar la cuenta "${acc.name}"?\n\n⚠️ Tiene ${orphanCount} trade(s) asociados. NO se borrarán, pero quedarán sin cuenta asignada.`
+    : `¿Borrar la cuenta "${acc.name}"?`;
+  if (!confirm(warning)) return;
+  accounts = accounts.filter(a => a.id != id);
+  if (selectedAccount == id) selectedAccount = null; // evita quedar filtrando por una cuenta que ya no existe
+  saveAccounts();
+  showToast('Cuenta eliminada', 'error');
+  render();
+}
+
+function updateSettings() {
+  settings.monthlyGoal = parseFloat(document.getElementById('set_goal').value) || 1000;
+  settings.maxDrawdownPct = parseFloat(document.getElementById('set_dd').value) || 5;
+  settings.maxRiskPerTrade = parseFloat(document.getElementById('set_risk').value) || 2;
+  saveSettings();
+  showToast('Configuración actualizada', 'success');
+}
+
+function csvEscape(value) {
+  const s = (value === null || value === undefined) ? '' : String(value);
+  if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportData(format) {
+  if (format === 'json') {
+    const data = { trades, accounts, settings, exportedAt: new Date().toISOString(), version: 'tj-2.1' };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    download(blob, `trading-journal-${new Date().toISOString().slice(0, 10)}.json`);
+    localStorage.setItem('tj_last_backup', new Date().toISOString());
+  } else if (format === 'csv') {
+    const headers = ['Fecha','Cuenta','Par','Lado','Entrada','Salida','Cantidad','Ganancia Bruta','Costo (Com.+Swap)','Ganancia Neta','Riesgo($)','R Realizado','R Máximo','Resultado','Sesión','Modelo','Timeframe','Link Gráfico','Notas'];
+    const rows = trades.map(t => {
+      const resultado = tradeSign(t) > 0 ? 'WIN' : tradeSign(t) < 0 ? 'LOSS' : 'BE';
+      const cost = (t.cost !== undefined && t.cost !== null) ? t.cost : getTradeCost(t);
+      return [
+        t.date, accounts.find(a => a.id == t.accountId)?.name || '', t.pair, t.side, t.entryPrice, t.exitPrice, t.quantity,
+        (t.profit || 0).toFixed(2), cost.toFixed(2), netProfit(t).toFixed(2), t.riskAmount || '', (t.rMultiple !== null && t.rMultiple !== undefined) ? t.rMultiple.toFixed(2) : '',
+        t.maxRMultiple || '', resultado, t.session, t.model, t.timeframe, t.chartUrl || '', t.notes
+      ];
+    });
+    // BOM al inicio para que Excel detecte UTF-8 y muestre bien tildes/ñ
+    const csv = '\ufeff' + [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    download(blob, `trades-${new Date().toISOString().slice(0, 10)}.csv`);
+  }
+  showToast(`Descarga: ${format.toUpperCase()}`, 'success');
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a); // requerido por Firefox para que el click dispare la descarga
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!confirm('Esto reemplazará TODOS tus trades y cuentas actuales con los del backup. ¿Continuar?')) {
+    event.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || typeof data !== 'object') throw new Error('Formato inválido');
+      if (!Array.isArray(data.trades) || !Array.isArray(data.accounts)) {
+        throw new Error('El archivo no tiene la estructura esperada (trades/accounts)');
+      }
+      trades = data.trades;
+      accounts = data.accounts;
+      settings = data.settings && typeof data.settings === 'object' ? data.settings : settings;
+      selectedAccount = null; dateFrom = null; dateTo = null; journalSearch = '';
+      saveTrades();
+      saveAccounts();
+      saveSettings();
+      showToast(`Restaurado: ${trades.length} trades, ${accounts.length} cuentas`, 'success');
+      render();
+    } catch (err) {
+      showToast('Error al restaurar archivo: ' + err.message, 'error');
+    } finally {
+      event.target.value = ''; // permite volver a seleccionar el mismo archivo si hace falta reintentar
+    }
+  };
+  reader.onerror = () => showToast('No se pudo leer el archivo', 'error');
+  reader.readAsText(file);
+}
+
+// ========== CHARTS ==========
+let modelCompareChartInstance = null;
+let monthlyChartInstance = null;
+let zellaChartInstance = null;
+let pnlChartInstance = null;
+let ddChartInstance = null;
+let rmultChartInstance = null;
+let compareChartInstance = null;
+function computeZellaScore(m) {
+  const winRateScore = Math.max(0, Math.min(100, m.winRate || 0));
+  const profitFactorScore = Math.max(0, Math.min(100, (m.profitFactor || 0) / 3 * 100));
+  const avgWinLoss = (m.avgLoss && m.avgLoss !== 0) ? Math.abs(m.avgWin / m.avgLoss) : 0;
+  const winLossScore = Math.max(0, Math.min(100, avgWinLoss / 3 * 100));
+  const drawdownScore = Math.max(0, Math.min(100, 100 - (m.maxDD || 0) * 2));
+  const riskRewardScore = Math.max(0, Math.min(100, (m.rrRatio || 0) / 3 * 100));
+  const consistencyScore = Math.max(0, Math.min(100, (m.expectancy || 0) >= 0 ? Math.min(100, 50 + (m.kelly || 0)) : Math.max(0, 50 + (m.kelly || 0))));
+  const values = [winRateScore, profitFactorScore, winLossScore, drawdownScore, riskRewardScore, consistencyScore];
+  const overall = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
+  return {
+    labels: ['Win Rate', 'Profit Factor', 'Avg Win/Loss', 'Drawdown', 'Risk/Reward', 'Consistencia'],
+    values, overall
+  };
+}
+
+function renderCharts() {
+  setTimeout(() => {
+    const modelCanvas = document.getElementById('model-compare-chart');
+    if (modelCanvas && typeof Chart !== 'undefined') {
+      if (modelCompareChartInstance) { modelCompareChartInstance.destroy(); modelCompareChartInstance = null; }
+      const byModelChart = calculateByModel();
+      modelCompareChartInstance = new Chart(modelCanvas, {
+        type: 'bar',
+        data: {
+          labels: byModelChart.map(b => b.model),
+          datasets: [{
+            label: 'P&L por Estrategia',
+            data: byModelChart.map(b => b.pnl),
+            backgroundColor: byModelChart.map(b => b.pnl >= 0 ? 'rgba(111,162,135,0.7)' : 'rgba(193,85,74,0.7)'),
+            borderColor: byModelChart.map(b => b.pnl >= 0 ? '#6FA287' : '#C1554A'),
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#2A3140' }, ticks: { color: '#8891A0' } },
+            x: { grid: { display: false }, ticks: { color: '#8891A0' } }
+          }
+        }
+      });
+    }
+    const monthlyCanvas = document.getElementById('monthly-chart');
+    if (monthlyCanvas && typeof Chart !== 'undefined') {
+      if (monthlyChartInstance) { monthlyChartInstance.destroy(); monthlyChartInstance = null; }
+      const byMonth = {};
+      getFilteredTrades().forEach(t => {
+        const ym = (t.date || '').slice(0, 7);
+        byMonth[ym] = (byMonth[ym] || 0) + netProfit(t);
+      });
+      const months = Object.keys(byMonth).sort();
+      monthlyChartInstance = new Chart(monthlyCanvas, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'P&L Mensual',
+            data: months.map(mo => byMonth[mo]),
+            backgroundColor: months.map(mo => byMonth[mo] >= 0 ? 'rgba(111,162,135,0.7)' : 'rgba(193,85,74,0.7)'),
+            borderColor: months.map(mo => byMonth[mo] >= 0 ? '#6FA287' : '#C1554A'),
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+      
